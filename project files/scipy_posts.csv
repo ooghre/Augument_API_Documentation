@@ -1,0 +1,1778 @@
+Id,PostTypeId,AcceptedAnswerId,ParentId,CreationDate,DeletionDate,Score,ViewCount,Body,OwnerUserId,OwnerDisplayName,LastEditorUserId,LastEditorDisplayName,LastEditDate,LastActivityDate,Title,Tags,AnswerCount,CommentCount,FavoriteCount,ClosedDate,CommunityOwnedDate,ContentLicense
+"874488","2","","874461","2009-05-17 12:16:13","","573","","<p>An import is required, <code>import scipy.io</code>...</p>
+
+<pre><code>import scipy.io
+mat = scipy.io.loadmat('file.mat')
+</code></pre>
+","11515","","8408080","","2019-07-24 20:23:04","2019-07-24 20:23:04","","","","4","","","","CC BY-SA 4.0"
+"19340117","2","","874461","2013-10-12 23:06:48","","160","","<p>Neither <code>scipy.io.savemat</code>, nor <code>scipy.io.loadmat</code> work for MATLAB arrays version 7.3. But the good part is that MATLAB version 7.3 files are hdf5 datasets. So they can be read using a number of tools, including <a href=""http://en.wikipedia.org/wiki/NumPy"" rel=""noreferrer"">NumPy</a>.</p>
+
+<p>For Python, you will need the <code>h5py</code> extension, which requires HDF5 on your system.</p>
+
+<pre><code>import numpy as np
+import h5py
+f = h5py.File('somefile.mat','r')
+data = f.get('data/variable1')
+data = np.array(data) # For converting to a NumPy array
+</code></pre>
+","1978354","","63550","","2019-07-24 09:30:25","2019-07-24 09:30:25","","","","8","","","","CC BY-SA 4.0"
+"26295900","2","","874461","2014-10-10 09:16:28","","7","","<p>There is also the <a href=""http://www.mathworks.de/de/help/matlab/matlab-engine-for-python.html"" rel=""nofollow noreferrer"">MATLAB Engine for Python</a> by MathWorks itself. If you have MATLAB, this might be worth considering (I haven't tried it myself but it has a lot more functionality than just reading MATLAB files). However, I don't know if it is allowed to distribute it to other users (it is probably not a problem if those persons have MATLAB. Otherwise, maybe NumPy is the right way to go?).</p>
+
+<p>Also, if you want to do all the basics yourself, <a href=""http://www.mathworks.com/help/pdf_doc/matlab/matfile_format.pdf"" rel=""nofollow noreferrer"">MathWorks provides</a> (if the link changes, try to google for <code>matfile_format.pdf</code> or its title <code>MAT-FILE Format</code>) a detailed documentation on the structure of the file format. It's not as complicated as I personally thought, but obviously, this is not the easiest way to go. It also depends on how many features of the <code>.mat</code>-files you want to support.</p>
+
+<p>I've written a ""small"" (about 700 lines) Python script which can read some basic <code>.mat</code>-files. I'm neither a Python expert nor a beginner and it took me about two days to write it (using the MathWorks documentation linked above). I've learned a lot of new stuff and it was quite fun (most of the time). As I've written the Python script at work, I'm afraid I cannot publish it... But I can give some advice here:</p>
+
+<ul>
+<li>First read the documentation.</li>
+<li>Use a hex editor (such as <a href=""http://mh-nexus.de/en/hxd/"" rel=""nofollow noreferrer"">HxD</a>) and look into a reference <code>.mat</code>-file you want to parse.</li>
+<li>Try to figure out the meaning of each byte by saving the bytes to a .txt file and annotate each line.</li>
+<li>Use classes to save each data element (such as <code>miCOMPRESSED</code>, <code>miMATRIX</code>, <code>mxDOUBLE</code>, or <code>miINT32</code>)</li>
+<li>The <code>.mat</code>-files' structure is optimal for saving the data elements in a tree data structure; each node has one class and subnodes</li>
+</ul>
+","1202500","","63550","","2019-07-24 09:37:57","2019-07-24 09:37:57","","","","1","","","","CC BY-SA 4.0"
+"28909094","2","","874461","2015-03-06 22:58:25","","13","","<p>Having MATLAB 2014b or newer installed, the <a href=""http://www.mathworks.com/help/matlab/matlab-engine-for-python.html"" rel=""nofollow noreferrer"">MATLAB engine for Python</a> could be used:</p>
+
+<pre><code>import matlab.engine
+eng = matlab.engine.start_matlab()
+content = eng.load(""example.mat"", nargout=1)
+</code></pre>
+","2732801","","63550","","2019-07-24 09:38:56","2019-07-24 09:38:56","","","","2","","","","CC BY-SA 4.0"
+"30868935","2","","874461","2015-06-16 13:25:39","","26","","<p>First save the .mat file as:</p>
+
+<pre><code>save('test.mat', '-v7')
+</code></pre>
+
+<p>After that, in Python, use the usual <code>loadmat</code> function:</p>
+
+<pre><code>import scipy.io as sio
+test = sio.loadmat('test.mat')
+</code></pre>
+","4093905","","63550","","2019-07-24 09:39:35","2019-07-24 09:39:35","","","","0","","","","CC BY-SA 4.0"
+"49115895","2","","874461","2018-03-05 17:10:41","","12","","<p><strong>Reading the file</strong></p>
+
+<pre><code>import scipy.io
+mat = scipy.io.loadmat(file_name)
+</code></pre>
+
+<p><strong>Inspecting the type of MAT variable</strong></p>
+
+<pre><code>print(type(mat))
+#OUTPUT - &lt;class 'dict'&gt;
+</code></pre>
+
+<p><em>The <strong>keys</strong> inside the dictionary are <strong>MATLAB variables</strong>, and the <strong>values</strong> are the <strong>objects assigned to those variables</strong>.</em></p>
+","7192584","","63550","","2019-07-24 09:42:54","2019-07-24 09:42:54","","","","0","","","","CC BY-SA 4.0"
+"52466911","2","","874461","2018-09-23 14:06:31","","19","","<p>There is a nice package called <a href=""https://pypi.org/project/mat4py/"" rel=""noreferrer""><code>mat4py</code></a> which can easily be installed using</p>
+
+<pre><code>pip install mat4py
+</code></pre>
+
+<p>It is straightforward to use (from the website):</p>
+
+<p><strong>Load data from a MAT-file</strong></p>
+
+<p>The function <code>loadmat</code> loads all variables stored in the MAT-file into a simple Python data structure, using only Python’s <code>dict</code> and <code>list</code> objects. Numeric and cell arrays are converted to row-ordered nested lists. Arrays are squeezed to eliminate arrays with only one element. The resulting data structure is composed of simple types that are compatible with the <a href=""http://en.wikipedia.org/wiki/JSON"" rel=""noreferrer"">JSON</a> format.</p>
+
+<p>Example: Load a MAT-file into a Python data structure:</p>
+
+<pre><code>from mat4py import loadmat
+
+data = loadmat('datafile.mat')
+</code></pre>
+
+<p>The variable <code>data</code> is a <code>dict</code> with the variables and values contained in the MAT-file.</p>
+
+<p><strong>Save a Python data structure to a MAT-file</strong></p>
+
+<p>Python data can be saved to a MAT-file, with the function <code>savemat</code>. Data has to be structured in the same way as for <code>loadmat</code>, i.e. it should be composed of simple data types, like <code>dict</code>, <code>list</code>, <code>str</code>, <code>int</code>, and <code>float</code>.</p>
+
+<p>Example: Save a Python data structure to a MAT-file:</p>
+
+<pre><code>from mat4py import savemat
+
+savemat('datafile.mat', data)
+</code></pre>
+
+<p>The parameter <code>data</code> shall be a <code>dict</code> with the variables.</p>
+","1534017","","63550","","2019-07-24 09:46:11","2019-07-24 09:46:11","","","","7","","","","CC BY-SA 4.0"
+"2214018","2","","2213551","2010-02-06 17:48:20","","106","","<p>An attempt to <code>easy_install</code> indicates a problem with their <a href=""http://pypi.python.org/pypi/scipy/0.7.0"" rel=""noreferrer"">listing</a> in the <a href=""http://pypi.python.org/pypi"" rel=""noreferrer"">Python Package Index</a>, which pip searches.</p>
+
+<pre><code>easy_install scipy
+Searching for scipy
+Reading http://pypi.python.org/simple/scipy/
+Reading http://www.scipy.org
+Reading http://sourceforge.net/project/showfiles.php?group_id=27747&amp;package_id=19531
+Reading http://new.scipy.org/Wiki/Download
+</code></pre>
+
+<p>All is not lost, however; <code>pip</code> can install from <a href=""http://en.wikipedia.org/wiki/Apache_Subversion"" rel=""noreferrer"">Subversion</a> (SVN), <a href=""http://en.wikipedia.org/wiki/Git_%28software%29"" rel=""noreferrer"">Git</a>, <a href=""http://en.wikipedia.org/wiki/Mercurial"" rel=""noreferrer"">Mercurial</a>, and <a href=""http://en.wikipedia.org/wiki/Bazaar_%28software%29"" rel=""noreferrer"">Bazaar</a> repositories. SciPy uses SVN:</p>
+
+<pre><code>pip install svn+http://svn.scipy.org/svn/scipy/trunk/#egg=scipy
+</code></pre>
+
+<p>Update (12-2012):</p>
+
+<pre><code>pip install git+https://github.com/scipy/scipy.git
+</code></pre>
+
+<p>Since NumPy is a dependency, it should be installed as well.</p>
+","","c_harm","1444917","","2015-04-16 21:12:24","2015-04-16 21:12:24","","","","4","","","","CC BY-SA 3.0"
+"3625365","2","","2213551","2010-09-02 08:29:46","","13","","<p>If I first install BLAS, LAPACK and GCC Fortran as system packages (I'm using <a href=""http://en.wikipedia.org/wiki/Arch_Linux"" rel=""noreferrer"">Arch Linux</a>), I can get SciPy installed with:</p>
+
+<pre><code>pip install scipy
+</code></pre>
+","437730","","63550","","2015-02-04 20:57:22","2015-02-04 20:57:22","","","","2","","","","CC BY-SA 3.0"
+"3865521","2","","2213551","2010-10-05 16:05:34","","33","","<p>In Ubuntu 10.04 (Lucid), I could successfully <code>pip install scipy</code> (within a virtualenv) after installing some of its dependencies, in particular:</p>
+
+<pre><code>$ sudo apt-get install libamd2.2.0 libblas3gf libc6 libgcc1 libgfortran3 liblapack3gf libumfpack5.4.0 libstdc++6 build-essential gfortran libatlas-sse2-dev python-all-dev
+</code></pre>
+","146000","","","","","2010-10-05 16:05:34","","","","4","","","","CC BY-SA 2.5"
+"15355787","2","","2213551","2013-03-12 07:45:21","","214","","<p><em>Prerequisite:</em></p>
+
+<pre><code>sudo apt-get install build-essential gfortran libatlas-base-dev python-pip python-dev
+sudo pip install --upgrade pip
+</code></pre>
+
+<p><em>Actual packages:</em></p>
+
+<pre><code>sudo pip install numpy
+sudo pip install scipy
+</code></pre>
+
+<p><em>Optional packages:</em></p>
+
+<pre><code>sudo pip install matplotlib   OR  sudo apt-get install python-matplotlib
+sudo pip install -U scikit-learn
+sudo pip install pandas
+</code></pre>
+
+<p><a href=""http://pythonadventures.wordpress.com/2011/11/09/install-numpy-and-scipy-on-ubuntu/"" rel=""noreferrer"">src</a></p>
+","742173","","895245","","2015-10-12 12:12:33","2015-10-12 12:12:33","","","","6","","","","CC BY-SA 3.0"
+"22493784","2","","2213551","2014-03-19 00:17:56","","20","","<p>I tried all the above and nothing worked for me. This solved all my problems:</p>
+
+<pre><code>pip install -U numpy
+
+pip install -U scipy
+</code></pre>
+
+<p>Note that the <code>-U</code> option to <code>pip install</code> requests that the package be <em>upgraded</em>. Without it, if the package is already installed <code>pip</code> will inform you of this and exit without doing anything.</p>
+","844007","","3852968","","2016-04-21 14:53:22","2016-04-21 14:53:22","","","","0","","","","CC BY-SA 3.0"
+"22633734","2","","2213551","2014-03-25 11:50:57","","7","","<p>For the Arch Linux users:</p>
+
+<p><code>pip install --user scipy</code> prerequisites the following Arch packages to be installed:</p>
+
+<ul>
+<li><code>gcc-fortran</code></li>
+<li><code>blas</code></li>
+<li><code>lapack</code></li>
+</ul>
+","1706750","","","","","2014-03-25 11:50:57","","","","2","","","","CC BY-SA 3.0"
+"28116352","2","","2213551","2015-01-23 18:26:22","","13","","<p>On Fedora, this works:</p>
+
+<pre><code>sudo yum install -y python-pip
+sudo yum install -y lapack lapack-devel blas blas-devel 
+sudo yum install -y blas-static lapack-static
+sudo pip install numpy
+sudo pip install scipy
+</code></pre>
+
+<p>If you get any <code>public key</code> errors while downloading, add <code>--nogpgcheck</code> as parameter to <code>yum</code>, for example:
+<code>yum --nogpgcheck install blas-devel</code></p>
+
+<p>On Fedora <strong>23</strong> onwards, use <code>dnf</code> instead of <code>yum</code>.</p>
+","810303","","810303","","2016-02-18 12:27:15","2016-02-18 12:27:15","","","","1","","","","CC BY-SA 3.0"
+"34220168","2","","2213551","2015-12-11 09:32:22","","22","","<p>To install scipy  on windows  follow these instructions:-</p>
+
+<p>Step-1 : Press this link <a href=""http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy"">http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy</a> to download a scipy .whl file (e.g. scipy-0.17.0-cp34-none-win_amd64.whl).</p>
+
+<p>Step-2: Go to the directory where that download file is there from the command prompt (cd folder-name ).</p>
+
+<p>Step-3: Run this command:</p>
+
+<pre><code>pip install scipy-0.17.0-cp27-none-win_amd64.whl
+</code></pre>
+","4262702","","1461850","","2016-01-27 19:10:02","2016-01-27 19:10:02","","","","4","","","","CC BY-SA 3.0"
+"2828121","2","","2828059","2010-05-13 15:39:39","","793","","<p>I suppose this works: <code>a[a[:,1].argsort()]</code></p>
+
+<p>This indicates the second column of <code>a</code> and sort it based on it accordingly.</p>
+","208339","","5025009","","2018-12-10 10:17:01","2018-12-10 10:17:01","","","","10","","","","CC BY-SA 4.0"
+"2828371","2","","2828059","2010-05-13 16:10:17","","152","","<p><a href=""https://stackoverflow.com/users/208339/steve-tjoa"">@steve</a>'s <a href=""https://stackoverflow.com/questions/2828059/sorting-arrays-in-numpy-by-column/2828121#2828121"">answer</a> is actually the most elegant way of doing it.</p>
+
+<p>For the ""correct"" way see the order keyword argument of <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.sort.html#numpy.ndarray.sort"" rel=""noreferrer"">numpy.ndarray.sort</a> </p>
+
+<p>However, you'll need to view your array as an array with fields (a structured array).</p>
+
+<p>The ""correct"" way is quite ugly if you didn't initially define your array with fields...</p>
+
+<p>As a quick example, to sort it and return a copy:</p>
+
+<pre><code>In [1]: import numpy as np
+
+In [2]: a = np.array([[1,2,3],[4,5,6],[0,0,1]])
+
+In [3]: np.sort(a.view('i8,i8,i8'), order=['f1'], axis=0).view(np.int)
+Out[3]: 
+array([[0, 0, 1],
+       [1, 2, 3],
+       [4, 5, 6]])
+</code></pre>
+
+<p>To sort it in-place:</p>
+
+<pre><code>In [6]: a.view('i8,i8,i8').sort(order=['f1'], axis=0) #&lt;-- returns None
+
+In [7]: a
+Out[7]: 
+array([[0, 0, 1],
+       [1, 2, 3],
+       [4, 5, 6]])
+</code></pre>
+
+<p>@Steve's really is the most elegant way to do it, as far as I know... </p>
+
+<p>The only advantage to this method is that the ""order"" argument is a list of the fields to order the search by. For example, you can sort by the second column, then the third column, then the first column by supplying order=['f1','f2','f0'].</p>
+","325565","","7758804","","2020-06-16 00:22:50","2020-06-16 00:22:50","","","","11","","","","CC BY-SA 4.0"
+"7588949","2","","2828059","2011-09-28 20:05:37","","20","","<p>From <a href=""http://wiki.python.org/moin/HowTo/Sorting"" rel=""noreferrer"">the Python documentation wiki</a>, I think you can do:</p>
+
+<pre><code>a = ([[1, 2, 3], [4, 5, 6], [0, 0, 1]]); 
+a = sorted(a, key=lambda a_entry: a_entry[1]) 
+print a
+</code></pre>
+
+<p>The output is:</p>
+
+<pre><code>[[[0, 0, 1], [1, 2, 3], [4, 5, 6]]]
+</code></pre>
+","541064","","63550","","2017-05-26 10:00:05","2017-05-26 10:00:05","","","","3","","","","CC BY-SA 3.0"
+"30623882","2","","2828059","2015-06-03 15:03:49","","18","","<p>From <a href=""http://mail.scipy.org/pipermail/numpy-discussion/2008-December/039332.html"" rel=""noreferrer"">the NumPy mailing list</a>, here's another solution:</p>
+
+<pre><code>&gt;&gt;&gt; a
+array([[1, 2],
+       [0, 0],
+       [1, 0],
+       [0, 2],
+       [2, 1],
+       [1, 0],
+       [1, 0],
+       [0, 0],
+       [1, 0],
+      [2, 2]])
+&gt;&gt;&gt; a[np.lexsort(np.fliplr(a).T)]
+array([[0, 0],
+       [0, 0],
+       [0, 2],
+       [1, 0],
+       [1, 0],
+       [1, 0],
+       [1, 0],
+       [1, 2],
+       [2, 1],
+       [2, 2]])
+</code></pre>
+","98080","","63550","","2017-05-26 10:00:55","2017-05-26 10:00:55","","","","1","","","","CC BY-SA 3.0"
+"35624868","2","","2828059","2016-02-25 10:37:19","","20","","<p>In case someone wants to make use of sorting at a critical part of their programs here's a performance comparison for the different proposals:</p>
+
+<pre><code>import numpy as np
+table = np.random.rand(5000, 10)
+
+%timeit table.view('f8,f8,f8,f8,f8,f8,f8,f8,f8,f8').sort(order=['f9'], axis=0)
+1000 loops, best of 3: 1.88 ms per loop
+
+%timeit table[table[:,9].argsort()]
+10000 loops, best of 3: 180 µs per loop
+
+import pandas as pd
+df = pd.DataFrame(table)
+%timeit df.sort_values(9, ascending=True)
+1000 loops, best of 3: 400 µs per loop
+</code></pre>
+
+<p>So, it looks like indexing with <a href=""http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.argsort.html"" rel=""noreferrer"">argsort</a> is the quickest method so far...</p>
+","1825593","","","","","2016-02-25 10:37:19","","","","0","","","","CC BY-SA 3.0"
+"38194077","2","","2828059","2016-07-05 01:42:09","","34","","<p>You can sort on multiple columns as per Steve Tjoa's method by using a stable sort like mergesort and sorting the indices from the least significant to the most significant columns:</p>
+
+<pre><code>a = a[a[:,2].argsort()] # First sort doesn't need to be stable.
+a = a[a[:,1].argsort(kind='mergesort')]
+a = a[a[:,0].argsort(kind='mergesort')]
+</code></pre>
+
+<p>This sorts by column 0, then 1, then 2.</p>
+","3329564","","3329564","","2017-02-25 22:37:00","2017-02-25 22:37:00","","","","3","","","","CC BY-SA 3.0"
+"3519314","2","","3518778","2010-08-19 06:34:54","","699","","<p>You can use Numpy's <code>genfromtxt()</code> method to do so, by setting the <code>delimiter</code> kwarg to a comma.</p>
+
+<pre><code>from numpy import genfromtxt
+my_data = genfromtxt('my_file.csv', delimiter=',')
+</code></pre>
+
+<p>More information on the function can be found at its respective <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html"" rel=""noreferrer"">documentation</a>.</p>
+","362809","","192839","","2012-03-02 15:05:49","2012-03-02 15:05:49","","","","7","","","","CC BY-SA 3.0"
+"4724179","2","","3518778","2011-01-18 12:44:35","","67","","<p>You can also try <a href=""https://numpy.org/doc/stable/reference/generated/numpy.genfromtxt.html#numpy.genfromtxt"" rel=""nofollow noreferrer""><code>recfromcsv()</code></a> which can guess data types and return a properly formatted record array.</p>
+","74342","","3427178","","2020-10-26 08:49:15","2020-10-26 08:49:15","","","","1","","","","CC BY-SA 4.0"
+"26296194","2","","3518778","2014-10-10 09:30:25","","195","","<p>I would recommend the <a href=""http://pandas.pydata.org/pandas-docs/stable/generated/pandas.io.parsers.read_csv.html"" rel=""noreferrer""><code>read_csv</code></a> function from the <code>pandas</code> library:</p>
+
+<pre><code>import pandas as pd
+df=pd.read_csv('myfile.csv', sep=',',header=None)
+df.values
+array([[ 1. ,  2. ,  3. ],
+       [ 4. ,  5.5,  6. ]])
+</code></pre>
+
+<p>This gives a pandas <a href=""http://pandas.pydata.org/pandas-docs/dev/dsintro.html#dataframe"" rel=""noreferrer"">DataFrame</a> - allowing <a href=""https://stackoverflow.com/a/11077215/1461850"">many useful data manipulation functions which are not directly available with numpy record arrays</a>.</p>
+
+<blockquote>
+  <p>DataFrame is a 2-dimensional labeled data structure with columns of
+  potentially different types. You can think of it like a spreadsheet or
+  SQL table...</p>
+</blockquote>
+
+<hr>
+
+<p>I would also recommend <code>genfromtxt</code>. However, since the question asks for a <a href=""http://docs.scipy.org/doc/numpy/user/basics.rec.html"" rel=""noreferrer"">record array</a>, as opposed to a normal array, the <code>dtype=None</code> parameter needs to be added to the <code>genfromtxt</code> call:</p>
+
+<p>Given an input file, <code>myfile.csv</code>:</p>
+
+<pre><code>1.0, 2, 3
+4, 5.5, 6
+
+import numpy as np
+np.genfromtxt('myfile.csv',delimiter=',')
+</code></pre>
+
+<p>gives an array:</p>
+
+<pre><code>array([[ 1. ,  2. ,  3. ],
+       [ 4. ,  5.5,  6. ]])
+</code></pre>
+
+<p>and </p>
+
+<pre><code>np.genfromtxt('myfile.csv',delimiter=',',dtype=None)
+</code></pre>
+
+<p>gives a record array:</p>
+
+<pre><code>array([(1.0, 2.0, 3), (4.0, 5.5, 6)], 
+      dtype=[('f0', '&lt;f8'), ('f1', '&lt;f8'), ('f2', '&lt;i4')])
+</code></pre>
+
+<p>This has the advantage that file with <a href=""https://stackoverflow.com/a/15481761"">multiple data types (including strings) can be easily imported</a>.</p>
+","1461850","","-1","","2017-05-23 12:10:48","2014-10-10 09:59:13","","","","3","","","","CC BY-SA 3.0"
+"28554340","2","","3518778","2015-02-17 03:52:37","","80","","<p>I timed the</p>
+
+<pre><code>from numpy import genfromtxt
+genfromtxt(fname = dest_file, dtype = (&lt;whatever options&gt;))
+</code></pre>
+
+<p>versus</p>
+
+<pre><code>import csv
+import numpy as np
+with open(dest_file,'r') as dest_f:
+    data_iter = csv.reader(dest_f,
+                           delimiter = delimiter,
+                           quotechar = '""')
+    data = [data for data in data_iter]
+data_array = np.asarray(data, dtype = &lt;whatever options&gt;)
+</code></pre>
+
+<p>on 4.6 million rows with about 70 columns and found that the NumPy path took 2 min 16 secs and the csv-list comprehension method took 13 seconds.</p>
+
+<p>I would recommend the csv-list comprehension method as it is most likely relies on pre-compiled libraries and not the interpreter as much as NumPy. I suspect the pandas method would have similar interpreter overhead.</p>
+","3867231","","63550","","2018-07-15 08:26:48","2018-07-15 08:26:48","","","","2","","","","CC BY-SA 4.0"
+"44669986","2","","3518778","2017-06-21 07:52:48","","7","","<p>You can use this code to send CSV file data into an array:</p>
+
+<pre><code>import numpy as np
+csv = np.genfromtxt('test.csv', delimiter="","")
+print(csv)
+</code></pre>
+","5983136","","63550","","2018-07-15 08:27:15","2018-07-15 08:27:15","","","","0","","","","CC BY-SA 4.0"
+"46727805","2","","3518778","2017-10-13 10:28:24","","17","","<p>As I tried both ways using NumPy and Pandas, using pandas has a lot of advantages:</p>
+
+<ul>
+<li>Faster</li>
+<li>Less CPU usage</li>
+<li>1/3 RAM usage compared to NumPy genfromtxt</li>
+</ul>
+
+<p>This is my test code:</p>
+
+<pre><code>$ for f in test_pandas.py test_numpy_csv.py ; do  /usr/bin/time python $f; done
+2.94user 0.41system 0:03.05elapsed 109%CPU (0avgtext+0avgdata 502068maxresident)k
+0inputs+24outputs (0major+107147minor)pagefaults 0swaps
+
+23.29user 0.72system 0:23.72elapsed 101%CPU (0avgtext+0avgdata 1680888maxresident)k
+0inputs+0outputs (0major+416145minor)pagefaults 0swaps
+</code></pre>
+
+<h3>test_numpy_csv.py</h3>
+
+<pre><code>from numpy import genfromtxt
+train = genfromtxt('/home/hvn/me/notebook/train.csv', delimiter=',')
+</code></pre>
+
+<h3>test_pandas.py</h3>
+
+<pre><code>from pandas import read_csv
+df = read_csv('/home/hvn/me/notebook/train.csv')
+</code></pre>
+
+<h3>Data file:</h3>
+
+<pre><code>du -h ~/me/notebook/train.csv
+ 59M    /home/hvn/me/notebook/train.csv
+</code></pre>
+
+<p>With NumPy and pandas at versions:</p>
+
+<pre><code>$ pip freeze | egrep -i 'pandas|numpy'
+numpy==1.13.3
+pandas==0.20.2
+</code></pre>
+","807703","","63550","","2018-07-15 08:29:04","2018-07-15 08:29:04","","","","0","","","","CC BY-SA 4.0"
+"6201035","2","","6200910","2011-06-01 12:21:06","","53","","<p>From the SciPy Reference Guide:</p>
+
+<blockquote>
+  <p>... all of the Numpy functions have
+  been subsumed into the <code>scipy</code>
+  namespace so that all of those
+  functions are available without
+  additionally importing Numpy.</p>
+</blockquote>
+
+<p>The intention is for users not to have to know the distinction between the <code>scipy</code> and <code>numpy</code> namespaces, though apparently you've found an exception. </p>
+","25188","","","","","2011-06-01 12:21:06","","","","0","","","","CC BY-SA 3.0"
+"6201054","2","","6200910","2011-06-01 12:22:06","","139","","<p>Last time I checked it, the scipy <code>__init__</code> method executes a</p>
+
+<pre><code>from numpy import *
+</code></pre>
+
+<p>so that the whole numpy namespace is included into scipy when the scipy module is imported.</p>
+
+<p>The <code>log10</code> behavior you are describing is interesting, because <em>both</em> versions are coming from numpy. One is a <code>ufunc</code>, the other is a <code>numpy.lib</code> function. Why scipy is preferring the library function over the <code>ufunc</code>, I don't know off the top of my head.</p>
+
+<hr>
+
+<p>EDIT: In fact, I can answer the <code>log10</code> question. Looking in the scipy <code>__init__</code> method I see this:</p>
+
+<pre><code># Import numpy symbols to scipy name space
+import numpy as _num
+from numpy import oldnumeric
+from numpy import *
+from numpy.random import rand, randn
+from numpy.fft import fft, ifft
+from numpy.lib.scimath import *
+</code></pre>
+
+<p>The <code>log10</code> function you get in scipy comes from <code>numpy.lib.scimath</code>. Looking at that code, it says:</p>
+
+<pre><code>""""""
+Wrapper functions to more user-friendly calling of certain math functions
+whose output data-type is different than the input data-type in certain
+domains of the input.
+
+For example, for functions like log() with branch cuts, the versions in this
+module provide the mathematically valid answers in the complex plane:
+
+&gt;&gt;&gt; import math
+&gt;&gt;&gt; from numpy.lib import scimath
+&gt;&gt;&gt; scimath.log(-math.exp(1)) == (1+1j*math.pi)
+True
+
+Similarly, sqrt(), other base logarithms, power() and trig functions are
+correctly handled.  See their respective docstrings for specific examples.
+""""""
+</code></pre>
+
+<p>It seems that module overlays the base numpy ufuncs for <code>sqrt</code>, <code>log</code>, <code>log2</code>, <code>logn</code>, <code>log10</code>, <code>power</code>, <code>arccos</code>, <code>arcsin</code>, and <code>arctanh</code>. That explains the behavior you are seeing. The underlying design reason why it is done like that is probably buried in a mailing list post somewhere.</p>
+","681865","","4230591","","2016-12-05 14:18:27","2016-12-05 14:18:27","","","","6","","","","CC BY-SA 3.0"
+"6201078","2","","6200910","2011-06-01 12:24:02","","8","","<p>From Wikipedia ( <a href=""http://en.wikipedia.org/wiki/NumPy#History"">http://en.wikipedia.org/wiki/NumPy#History</a> ):</p>
+
+<blockquote>
+  <p>The Numeric code was adapted to make
+  it more maintainable and flexible
+  enough to implement the novel features
+  of Numarray. This new project was part
+  of SciPy. To avoid installing a whole
+  package just to get an array object,
+  this new package was separated and
+  called NumPy.</p>
+</blockquote>
+
+<p><code>scipy</code> depends on <code>numpy</code> and imports many <code>numpy</code> functions into its namespace for convenience.</p>
+","307705","","","","","2011-06-01 12:24:02","","","","0","","","","CC BY-SA 3.0"
+"6919628","2","","6200910","2011-08-02 22:46:51","","12","","<p>There is a short comment at the end of the <a href=""http://docs.scipy.org/doc/scipy/reference/tutorial/general.html"" rel=""noreferrer"">introduction to SciPy</a> documentation:</p>
+
+<blockquote>
+  <p>Another useful command is<code>source</code>. When given a function written in Python as an argument, it  prints out a listing of the source code for that function. This can be helpful in learning  about an algorithm or understanding exactly what a function is 
+  doing with its arguments. Also don’t forget about the Python command dir which can be 
+  used to look at the namespace of a module or package.</p>
+</blockquote>
+
+<p>I think this will allow someone with enough knowledge of all the packages involved to pick apart exactly what the differences are between <em>some</em> scipy and numpy functions (it didn't help me with the log10 question at all). I definitely don't have that knowledge but <code>source</code> does indicate that <code>scipy.linalg.solve</code> and <code>numpy.linalg.solve</code> interact with lapack in different ways;</p>
+
+<pre><code>Python 2.4.3 (#1, May  5 2011, 18:44:23) 
+[GCC 4.1.2 20080704 (Red Hat 4.1.2-50)] on linux2
+&gt;&gt;&gt; import scipy
+&gt;&gt;&gt; import scipy.linalg
+&gt;&gt;&gt; import numpy
+&gt;&gt;&gt; scipy.source(scipy.linalg.solve)
+In file: /usr/lib64/python2.4/site-packages/scipy/linalg/basic.py
+
+def solve(a, b, sym_pos=0, lower=0, overwrite_a=0, overwrite_b=0,
+          debug = 0):
+    """""" solve(a, b, sym_pos=0, lower=0, overwrite_a=0, overwrite_b=0) -&gt; x
+
+    Solve a linear system of equations a * x = b for x.
+
+    Inputs:
+
+      a -- An N x N matrix.
+      b -- An N x nrhs matrix or N vector.
+      sym_pos -- Assume a is symmetric and positive definite.
+      lower -- Assume a is lower triangular, otherwise upper one.
+               Only used if sym_pos is true.
+      overwrite_y - Discard data in y, where y is a or b.
+
+    Outputs:
+
+      x -- The solution to the system a * x = b
+    """"""
+    a1, b1 = map(asarray_chkfinite,(a,b))
+    if len(a1.shape) != 2 or a1.shape[0] != a1.shape[1]:
+        raise ValueError, 'expected square matrix'
+    if a1.shape[0] != b1.shape[0]:
+        raise ValueError, 'incompatible dimensions'
+    overwrite_a = overwrite_a or (a1 is not a and not hasattr(a,'__array__'))
+    overwrite_b = overwrite_b or (b1 is not b and not hasattr(b,'__array__'))
+    if debug:
+        print 'solve:overwrite_a=',overwrite_a
+        print 'solve:overwrite_b=',overwrite_b
+    if sym_pos:
+        posv, = get_lapack_funcs(('posv',),(a1,b1))
+        c,x,info = posv(a1,b1,
+                        lower = lower,
+                        overwrite_a=overwrite_a,
+                        overwrite_b=overwrite_b)
+    else:
+        gesv, = get_lapack_funcs(('gesv',),(a1,b1))
+        lu,piv,x,info = gesv(a1,b1,
+                             overwrite_a=overwrite_a,
+                             overwrite_b=overwrite_b)
+
+    if info==0:
+        return x
+    if info&gt;0:
+        raise LinAlgError, ""singular matrix""
+    raise ValueError,\
+          'illegal value in %-th argument of internal gesv|posv'%(-info)
+
+&gt;&gt;&gt; scipy.source(numpy.linalg.solve)
+In file: /usr/lib64/python2.4/site-packages/numpy/linalg/linalg.py
+
+def solve(a, b):
+    """"""
+    Solve the equation ``a x = b`` for ``x``.
+
+    Parameters
+    ----------
+    a : array_like, shape (M, M)
+        Input equation coefficients.
+    b : array_like, shape (M,)
+        Equation target values.
+
+    Returns
+    -------
+    x : array, shape (M,)
+
+    Raises
+    ------
+    LinAlgError
+        If `a` is singular or not square.
+
+    Examples
+    --------
+    Solve the system of equations ``3 * x0 + x1 = 9`` and ``x0 + 2 * x1 = 8``:
+
+    &gt;&gt;&gt; a = np.array([[3,1], [1,2]])
+    &gt;&gt;&gt; b = np.array([9,8])
+    &gt;&gt;&gt; x = np.linalg.solve(a, b)
+    &gt;&gt;&gt; x
+    array([ 2.,  3.])
+
+    Check that the solution is correct:
+
+    &gt;&gt;&gt; (np.dot(a, x) == b).all()
+    True
+
+    """"""
+    a, _ = _makearray(a)
+    b, wrap = _makearray(b)
+    one_eq = len(b.shape) == 1
+    if one_eq:
+        b = b[:, newaxis]
+    _assertRank2(a, b)
+    _assertSquareness(a)
+    n_eq = a.shape[0]
+    n_rhs = b.shape[1]
+    if n_eq != b.shape[0]:
+        raise LinAlgError, 'Incompatible dimensions'
+    t, result_t = _commonType(a, b)
+#    lapack_routine = _findLapackRoutine('gesv', t)
+    if isComplexType(t):
+        lapack_routine = lapack_lite.zgesv
+    else:
+        lapack_routine = lapack_lite.dgesv
+    a, b = _fastCopyAndTranspose(t, a, b)
+    pivots = zeros(n_eq, fortran_int)
+    results = lapack_routine(n_eq, n_rhs, a, n_eq, pivots, b, n_eq, 0)
+    if results['info'] &gt; 0:
+        raise LinAlgError, 'Singular matrix'
+    if one_eq:
+        return wrap(b.ravel().astype(result_t))
+    else:
+        return wrap(b.transpose().astype(result_t))
+</code></pre>
+
+<p>This is also my first post so if I should change something here please let me know.</p>
+","875343","","","","","2011-08-02 22:46:51","","","","1","","","","CC BY-SA 3.0"
+"17964045","2","","6200910","2013-07-31 07:21:40","","51","","<p>It seems from the <a href=""http://www.scipy.org/scipylib/faq.html#id17"" rel=""noreferrer"">SciPy FAQ</a> that some functions from NumPy are here for historical reasons while it should
+only be in SciPy:</p>
+
+<blockquote>
+  <h2>What is the difference between NumPy and SciPy?</h2>
+  
+  <p>In an ideal world, NumPy would contain nothing but the array data type and
+  the most  basic operations: indexing, sorting, reshaping, basic
+  elementwise functions, et cetera. All numerical code would reside in
+  SciPy. However, one of NumPy’s important goals is compatibility, so NumPy
+  tries to retain all features supported by either of its predecessors. Thus
+  NumPy contains some linear algebra functions, even though these more
+  properly belong in SciPy. In any case, SciPy contains more fully-featured
+  versions of the linear algebra modules, as well as many other numerical
+  algorithms. If you are doing scientific computing with python, you should
+  probably install both NumPy and SciPy. Most new features belong in SciPy
+  rather than NumPy.</p>
+</blockquote>
+
+<p>That explains why <code>scipy.linalg.solve</code> offers some additional features over <code>numpy.linalg.solve</code>.</p>
+
+<p>I did not see the answer of SethMMorton to the <a href=""https://stackoverflow.com/a/10767644/1517918"">related question</a></p>
+","1517918","","63550","","2018-08-04 01:36:47","2018-08-04 01:36:47","","","","0","","","2013-07-31 07:21:40","CC BY-SA 4.0"
+"7818845","2","","7818811","2011-10-19 08:58:10","","67","","<p><a href=""http://sourceforge.net/projects/numpy/files//NumPy/1.5.0/NOTES.txt/view"" rel=""noreferrer"">Support for Python 3 was added in NumPy version 1.5.0</a>, so to begin with, you must download/install a newer version of NumPy.</p>
+","190597","","","","","2011-10-19 08:58:10","","","","3","","","","CC BY-SA 3.0"
+"7818857","2","","7818811","2011-10-19 08:59:08","","8","","<p>You installed the Numpy Version for Python 2.6 - so you can only use it with Python 2.6. You have to install Numpy for Python 3.x, e.g. that one: <a href=""http://sourceforge.net/projects/numpy/files/NumPy/1.6.1/numpy-1.6.1-win32-superpack-python3.2.exe/download"" rel=""noreferrer"">http://sourceforge.net/projects/numpy/files/NumPy/1.6.1/numpy-1.6.1-win32-superpack-python3.2.exe/download</a></p>
+
+<p>For an overview of the different versions, see here: <a href=""http://sourceforge.net/projects/numpy/files/NumPy/1.6.1/"" rel=""noreferrer"">http://sourceforge.net/projects/numpy/files/NumPy/1.6.1/</a></p>
+","651894","","","","","2011-10-19 08:59:08","","","","2","","","","CC BY-SA 3.0"
+"9728024","2","","7818811","2012-03-15 20:54:32","","8","","<p>I had this problem too after I installed Numpy. I solved it by just closing the Python interpreter and reopening. It may be something else to try if anyone else has this problem, perhaps it will save a few minutes!</p>
+","112614","","","","","2012-03-15 20:54:32","","","","0","","","","CC BY-SA 3.0"
+"20474733","2","","7818811","2013-12-09 15:49:33","","16","","<p>I think there are something wrong with the installation of numpy.
+Here are my steps to solve this problem.</p>
+
+<ol>
+<li>go to this website to download correct package: <a href=""http://sourceforge.net/projects/numpy/files/"">http://sourceforge.net/projects/numpy/files/</a></li>
+<li>unzip the package</li>
+<li>go to the document </li>
+<li>use this command to install numpy: <code>python setup.py install</code></li>
+</ol>
+","2730862","","113848","","2013-12-09 16:15:46","2013-12-09 16:15:46","","","","1","","","","CC BY-SA 3.0"
+"30005853","2","","7818811","2015-05-02 18:17:45","","14","","<p>I also had this problem (Import Error: No module named numpy) but in my case it was a problem with my PATH variables in Mac OS X.  I had made an earlier edit to my .bash_profile file that caused the paths for my Anaconda installation (and others) to not be added properly.  </p>
+
+<p>Just adding this comment to the list here in case other people like me come to this page with the same error message and have the same problem as I had.</p>
+","1609514","","","","","2015-05-02 18:17:45","","","","2","","","","CC BY-SA 3.0"
+"35476722","2","","7818811","2016-02-18 08:51:48","","286","","<p>You can simply use </p>
+
+<pre><code>pip install numpy
+</code></pre>
+
+<p>Or for python3, use</p>
+
+<pre><code>pip3 install numpy
+</code></pre>
+","2141840","","268040","","2017-12-14 08:15:59","2017-12-14 08:15:59","","","","9","","","","CC BY-SA 3.0"
+"47256553","2","","7818811","2017-11-13 03:10:15","","23","","<p><strong>Installing Numpy on Windows</strong></p>
+
+<ol>
+<li>Open Windows command prompt with administrator privileges <em>(quick method: Press the Windows key. Type ""cmd"". Right-click on the
+suggested ""Command Prompt"" and select ""Run as Administrator)</em></li>
+<li>Navigate to the Python installation directory's Scripts folder using the ""cd"" (change directory) command. e.g. ""cd C:\Program Files (x86)\PythonXX\Scripts""</li>
+</ol>
+
+<p>This might be: <em>C:\Users\\AppData\Local\Programs\Python\PythonXX\Scripts</em> or <em>C:\Program Files (x86)\PythonXX\Scripts</em> (where XX represents the Python version number), depending on where it was installed. It may be easier to find the folder using Windows explorer, and then paste or type the address from the Explorer address bar into the command prompt.</p>
+
+<ol start=""3"">
+<li>Enter the following command: ""pip install numpy"". </li>
+</ol>
+
+<p>You should see something similar to the following text appear as the package is downloaded and installed.</p>
+
+<pre><code>Collecting numpy
+  Downloading numpy-1.13.3-2-cp27-none-win32.whl (6.7MB)  
+  100% |################################| 6.7MB 112kB/s
+Installing collected packages: numpy
+Successfully installed numpy-1.13.3
+</code></pre>
+","8930459","","4648642","","2020-01-04 01:25:07","2020-01-04 01:25:07","","","","0","","","","CC BY-SA 4.0"
+"53895842","2","","7818811","2018-12-22 12:56:49","","7","","<p>I had numpy installed on the same environment both by pip and by conda, and simply removing and reinstalling either was not enough.</p>
+
+<p><strong>I had to reinstall both.</strong></p>
+
+<p>I don't know why it suddenly happened, but the solution was</p>
+
+<pre><code>pip uninstall numpy
+
+conda uninstall numpy
+</code></pre>
+
+<p>uninstalling from conda also removed <code>torch</code> and <code>torchvision</code>.</p>
+
+<p>then</p>
+
+<pre><code>conda install pytorch-cpu torchvision-cpu -c pytorch
+</code></pre>
+
+<p>and</p>
+
+<pre><code>pip install numpy
+</code></pre>
+
+<p>this resolved the issue for me.</p>
+","913098","","","","","2018-12-22 12:56:49","","","","1","","","","CC BY-SA 4.0"
+"54651389","2","","7818811","2019-02-12 13:39:01","","7","","<p>Faced with same issue</p>
+
+<pre><code>ImportError: No module named numpy
+</code></pre>
+
+<p>So, in our case (we are use <strong>PIP</strong> and python 2.7) the solution was <strong>SPLIT</strong> pip install commands : </p>
+
+<p>From </p>
+
+<pre><code>RUN pip install numpy scipy pandas sklearn
+</code></pre>
+
+<p>TO</p>
+
+<pre><code>RUN pip install numpy scipy
+RUN pip install pandas sklearn
+</code></pre>
+
+<p>Solution found here : <a href=""https://github.com/pandas-dev/pandas/issues/25193"" rel=""noreferrer"">https://github.com/pandas-dev/pandas/issues/25193</a>, it's related latest update of pandas to v0.24.0</p>
+","1151741","","","","","2019-02-12 13:39:01","","","","1","","","","CC BY-SA 4.0"
+"60215798","2","","7818811","2020-02-13 20:16:41","","8","","<p>You should try to install numpy using one of those:</p>
+
+<pre><code>pip install numpy
+pip2 install numpy
+pip3 install numpy
+</code></pre>
+
+<p>For some reason in my case pip2 solved the problem</p>
+","836252","","","","","2020-02-13 20:16:41","","","","0","","","","CC BY-SA 4.0"
+"13730849","2","","13728392","2012-12-05 19:23:12","","22","","<p>For a ready-to-use solution, see <a href=""https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html"" rel=""noreferrer"">https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html</a>.
+It provides running average with the <code>flat</code> window type. Note that this is a bit more sophisticated than the simple do-it-yourself convolve-method, since it tries to handle the problems at the beginning and the end of the data by reflecting it (which may or may not work in your case...).</p>
+
+<p>To start with, you could try:</p>
+
+<pre><code>a = np.random.random(100)
+plt.plot(a)
+b = smooth(a, window='flat')
+plt.plot(b)
+</code></pre>
+","1837157","","1825043","","2018-10-10 09:26:11","2018-10-10 09:26:11","","","","4","","","","CC BY-SA 4.0"
+"13732668","2","","13728392","2012-12-05 21:21:38","","52","","<p>You can calculate a running mean with:</p>
+
+<pre><code>import numpy as np
+
+def runningMean(x, N):
+    y = np.zeros((len(x),))
+    for ctr in range(len(x)):
+         y[ctr] = np.sum(x[ctr:(ctr+N)])
+    return y/N
+</code></pre>
+
+<p>But it's slow.</p>
+
+<p>Fortunately, numpy includes a <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html"" rel=""noreferrer"">convolve</a> function which we can use to speed things up. The running mean is equivalent to convolving <code>x</code> with a vector that is <code>N</code> long, with all members equal to <code>1/N</code>. The numpy implementation of convolve includes the starting transient, so you have to remove the first N-1 points:</p>
+
+<pre><code>def runningMeanFast(x, N):
+    return np.convolve(x, np.ones((N,))/N)[(N-1):]
+</code></pre>
+
+<p>On my machine, the fast version is 20-30 times faster, depending on the length of the input vector and size of the averaging window.</p>
+
+<p>Note that convolve does include a <code>'same'</code> mode which seems like it should address the starting transient issue,  but it splits it between the beginning and end.</p>
+","120261","","","","","2012-12-05 21:21:38","","","","5","","","","CC BY-SA 3.0"
+"22621523","2","","13728392","2014-03-24 22:01:33","","280","","<p><strong>UPDATE:</strong> more efficient solutions have been proposed, <a href=""https://stackoverflow.com/a/43200476/675674""><code>uniform_filter1d</code> from <code>scipy</code></a> being probably the best among the &quot;standard&quot; 3rd-party libraries, and some newer or specialized libraries are available too.</p>
+<hr />
+<p>You can use <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html"" rel=""nofollow noreferrer""><code>np.convolve</code></a> for that:</p>
+<pre><code>np.convolve(x, np.ones(N)/N, mode='valid')
+</code></pre>
+<h3>Explanation</h3>
+<p>The running mean is a case of the mathematical operation of <a href=""https://en.wikipedia.org/wiki/Convolution"" rel=""nofollow noreferrer"">convolution</a>. For the running mean, you slide a window along the input and compute the mean of the window's contents. For discrete 1D signals, convolution is the same thing, except instead of the mean you compute an arbitrary linear combination, i.e., multiply each element by a corresponding coefficient and add up the results. Those coefficients, one for each position in the window, are sometimes called the convolution <em>kernel</em>. The arithmetic mean of N values is <code>(x_1 + x_2 + ... + x_N) / N</code>, so the corresponding kernel is <code>(1/N, 1/N, ..., 1/N)</code>, and that's exactly what we get by using <code>np.ones(N)/N</code>.</p>
+<h3>Edges</h3>
+<p>The <code>mode</code> argument of <code>np.convolve</code> specifies how to handle the edges. I chose the <code>valid</code> mode here because I think that's how most people expect the running mean to work, but you may have other priorities. Here is a plot that illustrates the difference between the modes:</p>
+<pre><code>import numpy as np
+import matplotlib.pyplot as plt
+modes = ['full', 'same', 'valid']
+for m in modes:
+    plt.plot(np.convolve(np.ones(200), np.ones(50)/50, mode=m));
+plt.axis([-10, 251, -.1, 1.1]);
+plt.legend(modes, loc='lower center');
+plt.show()
+</code></pre>
+<p><img src=""https://i.stack.imgur.com/IMt8g.png"" alt=""Running mean convolve modes"" /></p>
+","675674","","1265409","","2020-11-21 13:23:15","2020-11-21 13:23:15","","","","4","","","","CC BY-SA 4.0"
+"27681394","2","","13728392","2014-12-28 22:50:57","","159","","<h2>Efficient solution</h2>
+
+<p>Convolution is much better than straightforward approach, but (I guess) it uses FFT and thus quite slow. However specially for computing the running mean the following approach works fine</p>
+
+<pre><code>def running_mean(x, N):
+    cumsum = numpy.cumsum(numpy.insert(x, 0, 0)) 
+    return (cumsum[N:] - cumsum[:-N]) / float(N)
+</code></pre>
+
+<p>The code to check</p>
+
+<pre><code>In[3]: x = numpy.random.random(100000)
+In[4]: N = 1000
+In[5]: %timeit result1 = numpy.convolve(x, numpy.ones((N,))/N, mode='valid')
+10 loops, best of 3: 41.4 ms per loop
+In[6]: %timeit result2 = running_mean(x, N)
+1000 loops, best of 3: 1.04 ms per loop
+</code></pre>
+
+<p>Note that <code>numpy.allclose(result1, result2)</code> is <code>True</code>, two methods are equivalent.
+The greater N, the greater difference in time.</p>
+
+<h3>warning: although cumsum is faster there will be increased floating point error that may cause your results to be invalid/incorrect/unacceptable</h3>
+
+<p><a href=""https://stackoverflow.com/questions/13728392/moving-average-or-running-mean/27681394#comment82346417_27681394"">the comments pointed out this floating point error issue here but i am making it more obvious here in the answer.</a>.</p>
+
+<pre><code># demonstrate loss of precision with only 100,000 points
+np.random.seed(42)
+x = np.random.randn(100000)+1e6
+y1 = running_mean_convolve(x, 10)
+y2 = running_mean_cumsum(x, 10)
+assert np.allclose(y1, y2, rtol=1e-12, atol=0)
+</code></pre>
+
+<ul>
+<li>the more points you accumulate over the greater the floating point error (so 1e5 points is noticable, 1e6 points is more significant, more than 1e6 and you may want to resetting the accumulators)</li>
+<li>you can cheat by using <a href=""https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html"" rel=""noreferrer""><code>np.longdouble</code></a> but your floating point error still will get significant for relatively large number of points (around >1e5 but depends on your data)</li>
+<li>you can plot the error and see it increasing relatively fast</li>
+<li><a href=""https://stackoverflow.com/a/22621523/52074"">the convolve solution</a> is slower but does not have this floating point loss of precision</li>
+<li><a href=""https://stackoverflow.com/a/43200476/52074"">the uniform_filter1d solution</a> is faster than this cumsum solution AND does not have this floating point loss of precision</li>
+</ul>
+","498892","","52074","","2020-02-21 14:44:30","2020-02-21 14:44:30","","","","12","","","","CC BY-SA 4.0"
+"28946068","2","","13728392","2015-03-09 15:42:17","","8","","<p>I haven't yet checked how fast this is, but you could try:</p>
+
+<pre><code>from collections import deque
+
+cache = deque() # keep track of seen values
+n = 10          # window size
+A = xrange(100) # some dummy iterable
+cum_sum = 0     # initialize cumulative sum
+
+for t, val in enumerate(A, 1):
+    cache.append(val)
+    cum_sum += val
+    if t &lt; n:
+        avg = cum_sum / float(t)
+    else:                           # if window is saturated,
+        cum_sum -= cache.popleft()  # subtract oldest value
+        avg = cum_sum / float(n)
+</code></pre>
+","2123555","","2123555","","2016-03-09 09:30:52","2016-03-09 09:30:52","","","","2","","","","CC BY-SA 3.0"
+"30141358","2","","13728392","2015-05-09 14:51:13","","83","","<p><strong>Update:</strong> The example below shows the old <code>pandas.rolling_mean</code> function which has been removed in recent versions of pandas. A modern equivalent of the function call below would be</p>
+
+<pre class=""lang-py prettyprint-override""><code>In [8]: pd.Series(x).rolling(window=N).mean().iloc[N-1:].values
+Out[8]: 
+array([ 0.49815397,  0.49844183,  0.49840518, ...,  0.49488191,
+        0.49456679,  0.49427121])
+</code></pre>
+
+<hr>
+
+<p><a href=""http://pandas.pydata.org/"" rel=""noreferrer"">pandas</a> is more suitable for this than NumPy or SciPy.  Its function <a href=""http://pandas.pydata.org/pandas-docs/stable/computation.html#moving-rolling-statistics-moments"" rel=""noreferrer"">rolling_mean</a> does the job conveniently.  It also returns a NumPy array when the input is an array.</p>
+
+<p>It is difficult to beat <code>rolling_mean</code> in performance with any custom pure Python implementation.  Here is an example performance against two of the proposed solutions:  </p>
+
+<pre class=""lang-py prettyprint-override""><code>In [1]: import numpy as np
+
+In [2]: import pandas as pd
+
+In [3]: def running_mean(x, N):
+   ...:     cumsum = np.cumsum(np.insert(x, 0, 0)) 
+   ...:     return (cumsum[N:] - cumsum[:-N]) / N
+   ...:
+
+In [4]: x = np.random.random(100000)
+
+In [5]: N = 1000
+
+In [6]: %timeit np.convolve(x, np.ones((N,))/N, mode='valid')
+10 loops, best of 3: 172 ms per loop
+
+In [7]: %timeit running_mean(x, N)
+100 loops, best of 3: 6.72 ms per loop
+
+In [8]: %timeit pd.rolling_mean(x, N)[N-1:]
+100 loops, best of 3: 4.74 ms per loop
+
+In [9]: np.allclose(pd.rolling_mean(x, N)[N-1:], running_mean(x, N))
+Out[9]: True
+</code></pre>
+
+<p>There are also nice options as to how to deal with the edge values.</p>
+","4867417","","4867417","","2018-12-17 06:59:13","2018-12-17 06:59:13","","","","5","","","","CC BY-SA 4.0"
+"33055571","2","","13728392","2015-10-10 15:21:39","","26","","<blockquote>
+  <p>or module for python that calculates</p>
+</blockquote>
+
+<p>in my tests at Tradewave.net TA-lib always wins:</p>
+
+<pre><code>import talib as ta
+import numpy as np
+import pandas as pd
+import scipy
+from scipy import signal
+import time as t
+
+PAIR = info.primary_pair
+PERIOD = 30
+
+def initialize():
+    storage.reset()
+    storage.elapsed = storage.get('elapsed', [0,0,0,0,0,0])
+
+def cumsum_sma(array, period):
+    ret = np.cumsum(array, dtype=float)
+    ret[period:] = ret[period:] - ret[:-period]
+    return ret[period - 1:] / period
+
+def pandas_sma(array, period):
+    return pd.rolling_mean(array, period)
+
+def api_sma(array, period):
+    # this method is native to Tradewave and does NOT return an array
+    return (data[PAIR].ma(PERIOD))
+
+def talib_sma(array, period):
+    return ta.MA(array, period)
+
+def convolve_sma(array, period):
+    return np.convolve(array, np.ones((period,))/period, mode='valid')
+
+def fftconvolve_sma(array, period):    
+    return scipy.signal.fftconvolve(
+        array, np.ones((period,))/period, mode='valid')    
+
+def tick():
+
+    close = data[PAIR].warmup_period('close')
+
+    t1 = t.time()
+    sma_api = api_sma(close, PERIOD)
+    t2 = t.time()
+    sma_cumsum = cumsum_sma(close, PERIOD)
+    t3 = t.time()
+    sma_pandas = pandas_sma(close, PERIOD)
+    t4 = t.time()
+    sma_talib = talib_sma(close, PERIOD)
+    t5 = t.time()
+    sma_convolve = convolve_sma(close, PERIOD)
+    t6 = t.time()
+    sma_fftconvolve = fftconvolve_sma(close, PERIOD)
+    t7 = t.time()
+
+    storage.elapsed[-1] = storage.elapsed[-1] + t2-t1
+    storage.elapsed[-2] = storage.elapsed[-2] + t3-t2
+    storage.elapsed[-3] = storage.elapsed[-3] + t4-t3
+    storage.elapsed[-4] = storage.elapsed[-4] + t5-t4
+    storage.elapsed[-5] = storage.elapsed[-5] + t6-t5    
+    storage.elapsed[-6] = storage.elapsed[-6] + t7-t6        
+
+    plot('sma_api', sma_api)  
+    plot('sma_cumsum', sma_cumsum[-5])
+    plot('sma_pandas', sma_pandas[-10])
+    plot('sma_talib', sma_talib[-15])
+    plot('sma_convolve', sma_convolve[-20])    
+    plot('sma_fftconvolve', sma_fftconvolve[-25])
+
+def stop():
+
+    log('ticks....: %s' % info.max_ticks)
+
+    log('api......: %.5f' % storage.elapsed[-1])
+    log('cumsum...: %.5f' % storage.elapsed[-2])
+    log('pandas...: %.5f' % storage.elapsed[-3])
+    log('talib....: %.5f' % storage.elapsed[-4])
+    log('convolve.: %.5f' % storage.elapsed[-5])    
+    log('fft......: %.5f' % storage.elapsed[-6])
+</code></pre>
+
+<p>results:</p>
+
+<pre><code>[2015-01-31 23:00:00] ticks....: 744
+[2015-01-31 23:00:00] api......: 0.16445
+[2015-01-31 23:00:00] cumsum...: 0.03189
+[2015-01-31 23:00:00] pandas...: 0.03677
+[2015-01-31 23:00:00] talib....: 0.00700  # &lt;&lt;&lt; Winner!
+[2015-01-31 23:00:00] convolve.: 0.04871
+[2015-01-31 23:00:00] fft......: 0.22306
+</code></pre>
+
+<p><a href=""https://i.stack.imgur.com/PkKQq.png""><img src=""https://i.stack.imgur.com/PkKQq.png"" alt=""enter image description here""></a></p>
+","3680588","","3680588","","2015-10-10 15:27:15","2015-10-10 15:27:15","","","","3","","","","CC BY-SA 3.0"
+"40086271","2","","13728392","2016-10-17 12:21:30","","6","","<p>A bit late to the party, but I've made my own little function that does NOT wrap around the ends or pads with zeroes that are then used to find the average as well. As a further treat is, that it also re-samples the signal at linearly spaced points. Customize the code at will to get other features.</p>
+
+<p>The method is a simple matrix multiplication with a normalized Gaussian kernel.</p>
+
+<pre><code>def running_mean(y_in, x_in, N_out=101, sigma=1):
+    '''
+    Returns running mean as a Bell-curve weighted average at evenly spaced
+    points. Does NOT wrap signal around, or pad with zeros.
+
+    Arguments:
+    y_in -- y values, the values to be smoothed and re-sampled
+    x_in -- x values for array
+
+    Keyword arguments:
+    N_out -- NoOf elements in resampled array.
+    sigma -- 'Width' of Bell-curve in units of param x .
+    '''
+    N_in = size(y_in)
+
+    # Gaussian kernel
+    x_out = np.linspace(np.min(x_in), np.max(x_in), N_out)
+    x_in_mesh, x_out_mesh = np.meshgrid(x_in, x_out)
+    gauss_kernel = np.exp(-np.square(x_in_mesh - x_out_mesh) / (2 * sigma**2))
+    # Normalize kernel, such that the sum is one along axis 1
+    normalization = np.tile(np.reshape(sum(gauss_kernel, axis=1), (N_out, 1)), (1, N_in))
+    gauss_kernel_normalized = gauss_kernel / normalization
+    # Perform running average as a linear operation
+    y_out = gauss_kernel_normalized @ y_in
+
+    return y_out, x_out
+</code></pre>
+
+<p>A simple usage on a sinusoidal signal with added normal distributed noise:
+<a href=""https://i.stack.imgur.com/9jgMM.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/9jgMM.png"" alt=""enter image description here""></a></p>
+","3591013","","3591013","","2016-10-17 12:34:02","2016-10-17 12:34:02","","","","2","","","","CC BY-SA 3.0"
+"40623822","2","","13728392","2016-11-16 03:57:50","","17","","<p>I know this is an old question, but here is a solution that doesn't use any extra data structures or libraries. It is linear in the number of elements of the input list and I cannot think of any other way to make it more efficient (actually if anyone knows of a better way to allocate the result, please let me know).</p>
+
+<p><strong>NOTE:</strong> this would be much faster using a numpy array instead of a list, but I wanted to eliminate all dependencies. It would also be possible to improve performance by multi-threaded execution</p>
+
+<p>The function assumes that the input list is one dimensional, so be careful.</p>
+
+<pre><code>### Running mean/Moving average
+def running_mean(l, N):
+    sum = 0
+    result = list( 0 for x in l)
+
+    for i in range( 0, N ):
+        sum = sum + l[i]
+        result[i] = sum / (i+1)
+
+    for i in range( N, len(l) ):
+        sum = sum - l[i-N] + l[i]
+        result[i] = sum / N
+
+    return result
+</code></pre>
+
+<p><strong>Example</strong></p>
+
+<p>Assume that we have a list <code>data = [ 1, 2, 3, 4, 5, 6 ]</code> on which we want to compute a rolling mean with period of 3, and that you also want a output list that is the same size of the input one (that's most often the case).</p>
+
+<p>The first element has index 0, so the rolling mean should be computed on elements of index -2, -1 and 0. Obviously we don't have data[-2] and data[-1] (unless you want to use special boundary conditions), so we assume that those elements are 0. This is equivalent to zero-padding the list, except we don't actually pad it, just keep track of the indices that require padding (from 0 to N-1).</p>
+
+<p>So, for the first N elements we just keep adding up the elements in an accumulator.</p>
+
+<pre><code>result[0] = (0 + 0 + 1) / 3  = 0.333    ==   (sum + 1) / 3
+result[1] = (0 + 1 + 2) / 3  = 1        ==   (sum + 2) / 3
+result[2] = (1 + 2 + 3) / 3  = 2        ==   (sum + 3) / 3
+</code></pre>
+
+<p>From elements N+1 forwards simple accumulation doesn't work. we expect <code>result[3] = (2 + 3 + 4)/3 = 3</code> but this is different from <code>(sum + 4)/3 = 3.333</code>.</p>
+
+<p>The way to compute the correct value is to subtract <code>data[0] = 1</code> from <code>sum+4</code>, thus giving  <code>sum + 4 - 1 = 9</code>. </p>
+
+<p>This happens because currently <code>sum = data[0] + data[1] + data[2]</code>, but it is also true for every <code>i &gt;= N</code> because, before the subtraction, <code>sum</code> is <code>data[i-N] + ... + data[i-2] + data[i-1]</code>.</p>
+","213541","","213541","","2019-04-24 07:42:55","2019-04-24 07:42:55","","","","0","","","","CC BY-SA 4.0"
+"43200476","2","","13728392","2017-04-04 07:06:08","","31","","<p>You can use <a href=""https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.uniform_filter1d.html"" rel=""noreferrer"">scipy.ndimage.filters.uniform_filter1d</a>:</p>
+
+<pre><code>import numpy as np
+from scipy.ndimage.filters import uniform_filter1d
+N = 1000
+x = np.random.random(100000)
+y = uniform_filter1d(x, size=N)
+</code></pre>
+
+<p><code>uniform_filter1d</code>:</p>
+
+<ul>
+<li>gives the output with the same numpy shape (i.e. number of points)</li>
+<li>allows multiple ways to handle the border where <code>'reflect'</code> is the default, but in my case, I rather wanted <code>'nearest'</code></li>
+</ul>
+
+<p>It is also rather quick (nearly 50 times faster than <code>np.convolve</code> and 2-5 times <a href=""https://stackoverflow.com/a/27681394/52074"">faster than the cumsum approach given above</a>):</p>
+
+<pre><code>%timeit y1 = np.convolve(x, np.ones((N,))/N, mode='same')
+100 loops, best of 3: 9.28 ms per loop
+
+%timeit y2 = uniform_filter1d(x, size=N)
+10000 loops, best of 3: 191 µs per loop
+</code></pre>
+
+<p>here's 3 functions that let you compare error/speed of different implementations:</p>
+
+<pre><code>from __future__ import division
+import numpy as np
+import scipy.ndimage.filters as ndif
+def running_mean_convolve(x, N):
+    return np.convolve(x, np.ones(N) / float(N), 'valid')
+def running_mean_cumsum(x, N):
+    cumsum = np.cumsum(np.insert(x, 0, 0))
+    return (cumsum[N:] - cumsum[:-N]) / float(N)
+def running_mean_uniform_filter1d(x, N):
+    return ndif.uniform_filter1d(x, N, mode='constant', origin=-(N//2))[:-(N-1)]
+</code></pre>
+","1116842","","548792","","2020-06-17 12:58:54","2020-06-17 12:58:54","","","","3","","","","CC BY-SA 4.0"
+"44797397","2","","13728392","2017-06-28 08:29:40","","26","","<p>For a short, fast solution that does the whole thing in one loop, without dependencies, the code below works great.</p>
+
+<pre><code>mylist = [1, 2, 3, 4, 5, 6, 7]
+N = 3
+cumsum, moving_aves = [0], []
+
+for i, x in enumerate(mylist, 1):
+    cumsum.append(cumsum[i-1] + x)
+    if i&gt;=N:
+        moving_ave = (cumsum[i] - cumsum[i-N])/N
+        #can do stuff with moving_ave here
+        moving_aves.append(moving_ave)
+</code></pre>
+","6182669","","6182669","","2017-06-28 08:36:29","2017-06-28 08:36:29","","","","2","","","","CC BY-SA 3.0"
+"50888339","2","","13728392","2018-06-16 13:29:31","","6","","<p>Instead of numpy or scipy, I would recommend pandas to do this more swiftly:</p>
+
+<pre><code>df['data'].rolling(3).mean()
+</code></pre>
+
+<p>This takes the moving average (MA) of 3 periods of the column ""data"". You can also calculate the shifted versions, for example the one that excludes the current cell (shifted one back) can be calculated easily as:</p>
+
+<pre><code>df['data'].shift(periods=1).rolling(3).mean()
+</code></pre>
+","7164176","","","","","2018-06-16 13:29:31","","","","3","","","","CC BY-SA 4.0"
+"53142177","2","","13728392","2018-11-04 15:05:04","","7","","<p><strong>Python standard library solution</strong></p>
+<p>This generator-function takes an iterable and a window size <code>N</code>  and yields the average over the current values inside the window.  It uses a <a href=""https://docs.python.org/3.7/library/collections.html#collections.deque"" rel=""nofollow noreferrer""><code>deque</code></a>, which is a datastructure similar to a list, but optimized for fast modifications (<code>pop</code>, <code>append</code>) <em>at both endpoints</em>.</p>
+<pre><code>from collections import deque
+from itertools import islice
+
+def sliding_avg(iterable, N):        
+    it = iter(iterable)
+    window = deque(islice(it, N))        
+    num_vals = len(window)
+
+    if num_vals &lt; N:
+        msg = 'window size {} exceeds total number of values {}'
+        raise ValueError(msg.format(N, num_vals))
+
+    N = float(N) # force floating point division if using Python 2
+    s = sum(window)
+    
+    while True:
+        yield s/N
+        try:
+            nxt = next(it)
+        except StopIteration:
+            break
+        s = s - window.popleft() + nxt
+        window.append(nxt)
+        
+</code></pre>
+<p>Here is the function in action:</p>
+<pre><code>&gt;&gt;&gt; values = range(100)
+&gt;&gt;&gt; N = 5
+&gt;&gt;&gt; window_avg = sliding_avg(values, N)
+&gt;&gt;&gt; 
+&gt;&gt;&gt; next(window_avg) # (0 + 1 + 2 + 3 + 4)/5
+&gt;&gt;&gt; 2.0
+&gt;&gt;&gt; next(window_avg) # (1 + 2 + 3 + 4 + 5)/5
+&gt;&gt;&gt; 3.0
+&gt;&gt;&gt; next(window_avg) # (2 + 3 + 4 + 5 + 6)/5
+&gt;&gt;&gt; 4.0
+</code></pre>
+","3620003","","3620003","","2020-11-13 11:55:23","2020-11-13 11:55:23","","","","0","","","","CC BY-SA 4.0"
+"54235268","2","","13728392","2019-01-17 11:47:28","","13","","<p>I feel this can be elegantly solved using <a href=""https://github.com/kwgoodman/bottleneck"" rel=""noreferrer"">bottleneck</a></p>
+
+<p>See basic sample below:</p>
+
+<pre><code>import numpy as np
+import bottleneck as bn
+
+a = np.random.randint(4, 1000, size=100)
+mm = bn.move_mean(a, window=5, min_count=1)
+</code></pre>
+
+<ul>
+<li><p>""mm"" is the moving mean for ""a"". </p></li>
+<li><p>""window"" is the max number of entries to consider for moving mean. </p></li>
+<li><p>""min_count"" is min number of entries to consider for moving mean (e.g. for first few elements or if the array has nan values).</p></li>
+</ul>
+
+<p>The good part is Bottleneck helps to deal with nan values and it's also very efficient.</p>
+","3938827","","","","","2019-01-17 11:47:28","","","","1","","","","CC BY-SA 4.0"
+"17478495","2","","17477979","2013-07-04 21:50:51","","467","","<p>The simplest way would be to first <a href=""http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.replace.html""><code>replace</code></a> infs to NaN:</p>
+
+<pre><code>df.replace([np.inf, -np.inf], np.nan)
+</code></pre>
+
+<p>and then use the <a href=""http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.dropna.html""><code>dropna</code></a>:</p>
+
+<pre><code>df.replace([np.inf, -np.inf], np.nan).dropna(subset=[""col1"", ""col2""], how=""all"")
+</code></pre>
+
+<p>For example:</p>
+
+<pre><code>In [11]: df = pd.DataFrame([1, 2, np.inf, -np.inf])
+
+In [12]: df.replace([np.inf, -np.inf], np.nan)
+Out[12]:
+    0
+0   1
+1   2
+2 NaN
+3 NaN
+</code></pre>
+
+<p><em>The same method would work for a Series.</em></p>
+","1240268","","","","","2013-07-04 21:50:51","","","","3","","","","CC BY-SA 3.0"
+"25224962","2","","17477979","2014-08-10 02:27:01","","8","","<p>The above solution will modify the <code>inf</code>s that are not in the target columns. To remedy that,</p>
+
+<pre><code>lst = [np.inf, -np.inf]
+to_replace = {v: lst for v in ['col1', 'col2']}
+df.replace(to_replace, np.nan)
+</code></pre>
+","832573","","832573","","2019-02-12 18:00:58","2019-02-12 18:00:58","","","","1","","","","CC BY-SA 4.0"
+"35783766","2","","17477979","2016-03-03 21:52:22","","15","","<p>Here is another method using <code>.loc</code> to replace inf with nan on a Series:</p>
+
+<pre><code>s.loc[(~np.isfinite(s)) &amp; s.notnull()] = np.nan
+</code></pre>
+
+<p>So, in response to the original question:</p>
+
+<pre><code>df = pd.DataFrame(np.ones((3, 3)), columns=list('ABC'))
+
+for i in range(3): 
+    df.iat[i, i] = np.inf
+
+df
+          A         B         C
+0       inf  1.000000  1.000000
+1  1.000000       inf  1.000000
+2  1.000000  1.000000       inf
+
+df.sum()
+A    inf
+B    inf
+C    inf
+dtype: float64
+
+df.apply(lambda s: s[np.isfinite(s)].dropna()).sum()
+A    2
+B    2
+C    2
+dtype: float64
+</code></pre>
+","2411802","","2411802","","2016-03-04 00:20:30","2016-03-04 00:20:30","","","","0","","","","CC BY-SA 3.0"
+"45746209","2","","17477979","2017-08-17 23:10:32","","46","","<p>With option context, this is possible without permanently setting <code>use_inf_as_na</code>. For example:</p>
+
+<pre><code>with pd.option_context('mode.use_inf_as_na', True):
+    df = df.dropna(subset=['col1', 'col2'], how='all')
+</code></pre>
+
+<p>Of course it can be set to treat <code>inf</code> as <code>NaN</code> permanently with </p>
+
+<pre><code>pd.set_option('use_inf_as_na', True)
+</code></pre>
+
+<hr>
+
+<p>For older versions, replace <code>use_inf_as_na</code> with <code>use_inf_as_null</code>.</p>
+","2285236","","2285236","","2019-08-02 20:47:43","2019-08-02 20:47:43","","","","3","","","","CC BY-SA 4.0"
+"47102421","2","","17477979","2017-11-03 18:34:37","","7","","<p>Yet another solution would be to use the <code>isin</code> method. Use it to determine whether each value is infinite or missing and then chain the <code>all</code> method to determine if all the values in the rows are infinite or missing.</p>
+
+<p>Finally, use the negation of that result to select the rows that don't have all infinite or missing values via boolean indexing.</p>
+
+<pre><code>all_inf_or_nan = df.isin([np.inf, -np.inf, np.nan]).all(axis='columns')
+df[~all_inf_or_nan]
+</code></pre>
+","3707607","","","","","2017-11-03 18:34:37","","","","0","","","","CC BY-SA 3.0"
+"55228059","2","","17477979","2019-03-18 18:41:47","","12","","<p>Use (fast and simple):</p>
+
+<pre><code>df = df[np.isfinite(df).all(1)]
+</code></pre>
+
+<p>This answer is based on <a href=""https://stackoverflow.com/a/54669790/7128154"">DougR's answer</a> in an other question.
+Here an example code:</p>
+
+<pre><code>import pandas as pd
+import numpy as np
+df=pd.DataFrame([1,2,3,np.nan,4,np.inf,5,-np.inf,6])
+print('Input:\n',df,sep='')
+df = df[np.isfinite(df).all(1)]
+print('\nDropped:\n',df,sep='')
+</code></pre>
+
+<p><strong>Result:</strong></p>
+
+<pre><code>Input:
+    0
+0  1.0000
+1  2.0000
+2  3.0000
+3     NaN
+4  4.0000
+5     inf
+6  5.0000
+7    -inf
+8  6.0000
+
+Dropped:
+     0
+0  1.0
+1  2.0
+2  3.0
+4  4.0
+6  5.0
+8  6.0
+</code></pre>
+","7128154","","","","","2019-03-18 18:41:47","","","","2","","","","CC BY-SA 4.0"
+"20619164","2","","20618804","2013-12-16 19:24:44","","81","","<p>If you are interested in a ""smooth"" version of a signal that is periodic (like your example), then a FFT is the right way to go. Take the fourier transform and subtract out the low-contributing frequencies:</p>
+
+<pre><code>import numpy as np
+import scipy.fftpack
+
+N = 100
+x = np.linspace(0,2*np.pi,N)
+y = np.sin(x) + np.random.random(N) * 0.2
+
+w = scipy.fftpack.rfft(y)
+f = scipy.fftpack.rfftfreq(N, x[1]-x[0])
+spectrum = w**2
+
+cutoff_idx = spectrum &lt; (spectrum.max()/5)
+w2 = w.copy()
+w2[cutoff_idx] = 0
+
+y2 = scipy.fftpack.irfft(w2)
+</code></pre>
+
+<p><img src=""https://i.stack.imgur.com/6zmHR.png"" alt=""enter image description here""></p>
+
+<p>Even if your signal is not completely periodic, this will do a great job of subtracting out white noise. There a many types of filters to use (high-pass, low-pass, etc...), the appropriate one is dependent on what you are looking for.</p>
+","249341","","","","","2013-12-16 19:24:44","","","","1","","","","CC BY-SA 3.0"
+"20619392","2","","20618804","2013-12-16 19:36:27","","50","","<p>Fitting a moving average to your data would smooth out the noise, see this <a href=""https://stackoverflow.com/a/11352216/54557"">this answer</a> for how to do that.</p>
+
+<p>If you'd like to use <a href=""http://en.wikipedia.org/wiki/Local_regression"" rel=""noreferrer"">LOWESS</a> to fit your data (it's similar to a moving average but more sophisticated), you can do that using the <a href=""https://pypi.python.org/pypi/statsmodels"" rel=""noreferrer"">statsmodels</a> library:</p>
+
+<pre><code>import numpy as np
+import pylab as plt
+import statsmodels.api as sm
+
+x = np.linspace(0,2*np.pi,100)
+y = np.sin(x) + np.random.random(100) * 0.2
+lowess = sm.nonparametric.lowess(y, x, frac=0.1)
+
+plt.plot(x, y, '+')
+plt.plot(lowess[:, 0], lowess[:, 1])
+plt.show()
+</code></pre>
+
+<p>Finally, if you know the functional form of your signal, you could fit a curve to your data, which would probably be the best thing to do.</p>
+","54557","","-1","","2017-05-23 12:02:45","2013-12-16 19:36:27","","","","1","","","","CC BY-SA 3.0"
+"20642478","2","","20618804","2013-12-17 19:01:21","","287","","<p>I prefer a <a href=""http://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter_for_smoothing_and_differentiation"" rel=""noreferrer"">Savitzky-Golay filter</a>. It uses least squares to regress a small window of your data onto a polynomial, then uses the polynomial to estimate the point in the center of the window. Finally the window is shifted forward by one data point and the process repeats. This continues until every point has been optimally adjusted relative to its neighbors. It works great even with noisy samples from non-periodic and non-linear sources.</p>
+
+<p>Here is a <a href=""http://wiki.scipy.org/Cookbook/SavitzkyGolay"" rel=""noreferrer"">thorough cookbook example</a>. See my code below to get an idea of how easy it is to use. Note: I left out the code for defining the <code>savitzky_golay()</code> function because you can literally copy/paste it from the cookbook example I linked above.</p>
+
+<pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(0,2*np.pi,100)
+y = np.sin(x) + np.random.random(100) * 0.2
+yhat = savitzky_golay(y, 51, 3) # window size 51, polynomial order 3
+
+plt.plot(x,y)
+plt.plot(x,yhat, color='red')
+plt.show()
+</code></pre>
+
+<p><img src=""https://i.stack.imgur.com/SbvSL.png"" alt=""optimally smoothing a noisy sinusoid""></p>
+
+<p><strong>UPDATE:</strong> It has come to my attention that the cookbook example I linked to has been taken down. Fortunately, the Savitzky-Golay filter has been incorporated <a href=""http://docs.scipy.org/doc/scipy-dev/reference/generated/scipy.signal.savgol_filter.html#scipy.signal.savgol_filter"" rel=""noreferrer"">into the SciPy library</a>, as pointed out by <a href=""https://stackoverflow.com/users/2068580/dodohjk"">@dodohjk</a>.
+To adapt the above code by using SciPy source, type:</p>
+
+<pre><code>from scipy.signal import savgol_filter
+yhat = savgol_filter(y, 51, 3) # window size 51, polynomial order 3
+</code></pre>
+","1462220","","6383205","","2018-07-12 00:41:21","2018-07-12 00:41:21","","","","4","","","","CC BY-SA 4.0"
+"26127651","2","","20618804","2014-09-30 18:29:06","","18","","<p>Another option is to use <a href=""https://www.statsmodels.org/stable/generated/statsmodels.nonparametric.kernel_regression.KernelReg.html"" rel=""nofollow noreferrer"">KernelReg</a> in <a href=""https://www.statsmodels.org/stable/"" rel=""nofollow noreferrer"">statsmodels</a>:</p>
+
+<pre><code>from statsmodels.nonparametric.kernel_regression import KernelReg
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(0,2*np.pi,100)
+y = np.sin(x) + np.random.random(100) * 0.2
+
+# The third parameter specifies the type of the variable x;
+# 'c' stands for continuous
+kr = KernelReg(y,x,'c')
+plt.plot(x, y, '+')
+y_pred, y_std = kr.fit(x)
+
+plt.plot(x, y_pred)
+plt.show()
+</code></pre>
+","2340065","","547270","","2019-09-06 14:22:16","2019-09-06 14:22:16","","","","0","","","","CC BY-SA 4.0"
+"26337730","2","","20618804","2014-10-13 10:23:04","","135","","<p>EDIT: look at <a href=""https://stackoverflow.com/a/34387987/4117624"">this</a> answer. Using <code>np.cumsum</code> is much faster than <code>np.convolve</code></p>
+<p>A quick and dirty way to smooth data I use, based on a moving average box (by convolution):</p>
+<pre><code>x = np.linspace(0,2*np.pi,100)
+y = np.sin(x) + np.random.random(100) * 0.8
+
+def smooth(y, box_pts):
+    box = np.ones(box_pts)/box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    return y_smooth
+
+plot(x, y,'o')
+plot(x, smooth(y,3), 'r-', lw=2)
+plot(x, smooth(y,19), 'g-', lw=2)
+</code></pre>
+<p><a href=""https://i.stack.imgur.com/Jk4EV.png"" rel=""nofollow noreferrer""><img src=""https://i.stack.imgur.com/Jk4EV.png"" alt=""enter image description here"" /></a></p>
+","4117624","","4117624","","2020-11-20 14:53:54","2020-11-20 14:53:54","","","","1","","","","CC BY-SA 4.0"
+"50617444","2","","20618804","2018-05-31 05:47:08","","7","","<p>Check this out! There is a clear definition of smoothing of a 1D signal.</p>
+
+<p><a href=""http://scipy-cookbook.readthedocs.io/items/SignalSmooth.html"" rel=""noreferrer"">http://scipy-cookbook.readthedocs.io/items/SignalSmooth.html</a></p>
+
+<p>Shortcut:</p>
+
+<pre><code>import numpy
+
+def smooth(x,window_len=11,window='hanning'):
+    """"""smooth the data using a window with requested size.
+
+    This method is based on the convolution of a scaled window with the signal.
+    The signal is prepared by introducing reflected copies of the signal 
+    (with the window size) in both ends so that transient parts are minimized
+    in the begining and end part of the output signal.
+
+    input:
+        x: the input signal 
+        window_len: the dimension of the smoothing window; should be an odd integer
+        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+            flat window will produce a moving average smoothing.
+
+    output:
+        the smoothed signal
+
+    example:
+
+    t=linspace(-2,2,0.1)
+    x=sin(t)+randn(len(t))*0.1
+    y=smooth(x)
+
+    see also: 
+
+    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
+    scipy.signal.lfilter
+
+    TODO: the window parameter could be the window itself if an array instead of a string
+    NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
+    """"""
+
+    if x.ndim != 1:
+        raise ValueError, ""smooth only accepts 1 dimension arrays.""
+
+    if x.size &lt; window_len:
+        raise ValueError, ""Input vector needs to be bigger than window size.""
+
+
+    if window_len&lt;3:
+        return x
+
+
+    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+        raise ValueError, ""Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'""
+
+
+    s=numpy.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
+    #print(len(s))
+    if window == 'flat': #moving average
+        w=numpy.ones(window_len,'d')
+    else:
+        w=eval('numpy.'+window+'(window_len)')
+
+    y=numpy.convolve(w/w.sum(),s,mode='valid')
+    return y
+
+
+
+
+from numpy import *
+from pylab import *
+
+def smooth_demo():
+
+    t=linspace(-4,4,100)
+    x=sin(t)
+    xn=x+randn(len(t))*0.1
+    y=smooth(x)
+
+    ws=31
+
+    subplot(211)
+    plot(ones(ws))
+
+    windows=['flat', 'hanning', 'hamming', 'bartlett', 'blackman']
+
+    hold(True)
+    for w in windows[1:]:
+        eval('plot('+w+'(ws) )')
+
+    axis([0,30,0,1.1])
+
+    legend(windows)
+    title(""The smoothing windows"")
+    subplot(212)
+    plot(x)
+    plot(xn)
+    for w in windows:
+        plot(smooth(xn,10,w))
+    l=['original signal', 'signal with noise']
+    l.extend(windows)
+
+    legend(l)
+    title(""Smoothing a noisy signal"")
+    show()
+
+
+if __name__=='__main__':
+    smooth_demo()
+</code></pre>
+","8656360","","8656360","","2018-05-31 05:57:24","2018-05-31 05:57:24","","","","1","","","","CC BY-SA 4.0"
+"63458548","2","","20618804","2020-08-17 20:57:14","","9","","<p>This Question is already thoroughly answered, so I think a runtime analysis of the proposed methods would be of interest (It was for me, anyway). I will also look at the behavior of the methods at the center and the edges of the noisy dataset.</p>
+<h1>TL;DR</h1>
+<pre><code>                    | runtime in s | runtime in s
+method              | python list  | numpy array
+--------------------|--------------|------------
+kernel regression   | 23.93405     | 22.75967 
+lowess              |  0.61351     |  0.61524 
+naive average       |  0.02485     |  0.02326 
+others*             |  0.00150     |  0.00150 
+fft                 |  0.00021     |  0.00021 
+numpy convolve      |  0.00017     |  0.00015 
+
+*savgol with different fit functions and some numpy methods
+</code></pre>
+<p>Kernel regression scales badly, Lowess is a bit faster, but both produce smooth curves. Savgol is a middle ground on speed and can produce both jumpy and smooth outputs, depending on the grade of the polynomial. FFT is extremely fast, but only works on periodic data.</p>
+<p>Moving average methods with numpy are faster but obviously produce a graph with steps in it.</p>
+<h1>Setup</h1>
+<p>I generated 1000 data points in the shape of a sin curve:</p>
+<pre><code>size = 1000
+x = np.linspace(0, 4 * np.pi, size)
+y = np.sin(x) + np.random.random(size) * 0.2
+data = {&quot;x&quot;: x, &quot;y&quot;: y}
+</code></pre>
+<p>I pass these into a function to measure the runtime and plot the resulting fit:</p>
+<pre><code>def test_func(f, label):  # f: function handle to one of the smoothing methods
+    start = time()
+    for i in range(5):
+        arr = f(data[&quot;y&quot;], 20)
+    print(f&quot;{label:26s} - time: {time() - start:8.5f} &quot;)
+    plt.plot(data[&quot;x&quot;], arr, &quot;-&quot;, label=label)
+</code></pre>
+<p>I tested many different smoothing fuctions. <code>arr</code> is the array of y values to be smoothed and <code>span</code> the smoothing parameter. The lower, the better the fit will approach the original data, the higher, the smoother the resulting curve will be.</p>
+<pre><code>def smooth_data_convolve_my_average(arr, span):
+    re = np.convolve(arr, np.ones(span * 2 + 1) / (span * 2 + 1), mode=&quot;same&quot;)
+
+    # The &quot;my_average&quot; part: shrinks the averaging window on the side that 
+    # reaches beyond the data, keeps the other side the same size as given 
+    # by &quot;span&quot;
+    re[0] = np.average(arr[:span])
+    for i in range(1, span + 1):
+        re[i] = np.average(arr[:i + span])
+        re[-i] = np.average(arr[-i - span:])
+    return re
+
+def smooth_data_np_average(arr, span):  # my original, naive approach
+    return [np.average(arr[val - span:val + span + 1]) for val in range(len(arr))]
+
+def smooth_data_np_convolve(arr, span):
+    return np.convolve(arr, np.ones(span * 2 + 1) / (span * 2 + 1), mode=&quot;same&quot;)
+
+def smooth_data_np_cumsum_my_average(arr, span):
+    cumsum_vec = np.cumsum(arr)
+    moving_average = (cumsum_vec[2 * span:] - cumsum_vec[:-2 * span]) / (2 * span)
+
+    # The &quot;my_average&quot; part again. Slightly different to before, because the
+    # moving average from cumsum is shorter than the input and needs to be padded
+    front, back = [np.average(arr[:span])], []
+    for i in range(1, span):
+        front.append(np.average(arr[:i + span]))
+        back.insert(0, np.average(arr[-i - span:]))
+    back.insert(0, np.average(arr[-2 * span:]))
+    return np.concatenate((front, moving_average, back))
+
+def smooth_data_lowess(arr, span):
+    x = np.linspace(0, 1, len(arr))
+    return sm.nonparametric.lowess(arr, x, frac=(5*span / len(arr)), return_sorted=False)
+
+def smooth_data_kernel_regression(arr, span):
+    # &quot;span&quot; smoothing parameter is ignored. If you know how to 
+    # incorporate that with kernel regression, please comment below.
+    kr = KernelReg(arr, np.linspace(0, 1, len(arr)), 'c')
+    return kr.fit()[0]
+
+def smooth_data_savgol_0(arr, span):  
+    return savgol_filter(arr, span * 2 + 1, 0)
+
+def smooth_data_savgol_1(arr, span):  
+    return savgol_filter(arr, span * 2 + 1, 1)
+
+def smooth_data_savgol_2(arr, span):  
+    return savgol_filter(arr, span * 2 + 1, 2)
+
+def smooth_data_fft(arr, span):  # the scaling of &quot;span&quot; is open to suggestions
+    w = fftpack.rfft(arr)
+    spectrum = w ** 2
+    cutoff_idx = spectrum &lt; (spectrum.max() * (1 - np.exp(-span / 2000)))
+    w[cutoff_idx] = 0
+    return fftpack.irfft(w)
+</code></pre>
+<h1>Results</h1>
+<h2>Speed</h2>
+<p>Runtime over 1000 elements, tested on a python list as well as a numpy array to hold the values.</p>
+<pre><code>method              | python list | numpy array
+--------------------|-------------|------------
+kernel regression   | 23.93405 s  | 22.75967 s
+lowess              |  0.61351 s  |  0.61524 s
+numpy average       |  0.02485 s  |  0.02326 s
+savgol 2            |  0.00186 s  |  0.00196 s
+savgol 1            |  0.00157 s  |  0.00161 s
+savgol 0            |  0.00155 s  |  0.00151 s
+numpy convolve + me |  0.00121 s  |  0.00115 s
+numpy cumsum + me   |  0.00114 s  |  0.00105 s
+fft                 |  0.00021 s  |  0.00021 s
+numpy convolve      |  0.00017 s  |  0.00015 s
+</code></pre>
+<p>Especially <code>kernel regression</code> is very slow to compute over 1k elements, <code>lowess</code> also fails when the dataset becomes much larger. <code>numpy convolve</code> and <code>fft</code> are especially fast. I did not investigate the runtime behavior (O(n)) with increasing or decreasing sample size.</p>
+<h2>Edge behavior</h2>
+<p>I'll separate this part into two, to keep image understandable.</p>
+<p>Numpy based methods + <code>savgol 0</code>:</p>
+<p><a href=""https://i.stack.imgur.com/BapVF.png"" rel=""nofollow noreferrer""><img src=""https://i.stack.imgur.com/BapVF.png"" alt=""Edge behaviour of numpy based methods"" /></a></p>
+<p>These methods calculate an average of the data, the graph is not smoothed. They all (with the exception of <code>numpy.cumsum</code>) result in the same graph when the window that is used to calculate the average does not touch the edge of the data. The discrepancy to <code>numpy.cumsum</code> is most likely due to a 'off by one' error in the window size.</p>
+<p>There are different edge behaviours when the method has to work with less data:</p>
+<ul>
+<li><code>savgol 0</code>: continues with a constant to the edge of the data (<code>savgol 1</code> and <code>savgol 2</code> end with a line and parabola respectively)</li>
+<li><code>numpy average</code>: stops when the window reaches the left side of the data and fills those places in the array with <code>Nan</code>, same behaviour as <code>my_average</code> method on the right side</li>
+<li><code>numpy convolve</code>: follows the data pretty accurately. I suspect the window size is reduced symmetrically when one side of the window reaches the edge of the data</li>
+<li><code>my_average</code>/<code>me</code>: my own method that I implemented, because I was not satisfied with the other ones. Simply shrinks the part of the window that is reaching beyond the data to the edge of the data, but keeps the window to the other side the original size given with <code>span</code></li>
+</ul>
+<p>Complicated methods:
+<a href=""https://i.stack.imgur.com/LNrKb.png"" rel=""nofollow noreferrer""><img src=""https://i.stack.imgur.com/LNrKb.png"" alt=""Edge behaviour of the complicated methods"" /></a></p>
+<p>These methods all end with a nice fit to the data. <code>savgol 1</code> ends with a line, <code>savgol 2</code> with a parabola.</p>
+<h2>Curve behaviour</h2>
+<p>To showcase the behaviour of the different methods in the middle of the data.</p>
+<p><a href=""https://i.stack.imgur.com/VXjeC.png"" rel=""nofollow noreferrer""><img src=""https://i.stack.imgur.com/VXjeC.png"" alt=""Curve behavior of the different methods"" /></a></p>
+<p>The different <code>savgol</code> and <code>average</code> filters produce a rough line, <code>lowess</code>, <code>fft</code> and <code>kernel regression</code> produce a smooth fit. <code>lowess</code> appears to cut corners when the data changes.</p>
+<h1>Motivation</h1>
+<p>I have a Raspberry Pi logging data for fun and the visualization proved to be a small challenge. All data points, except RAM usage and ethernet traffic are only recorded in discrete steps and/or inherently noisy. For example the temperature sensor only outputs whole degrees, but differs by up to two degrees between consecutive measurements. No useful information can be gained from such a scatter plot. To visualize the data I therefore needed some method that is not too computationally expensive and produced a moving average. I also wanted nice behavior at the edges of the data, as this especially impacts the latest info when looking at live data. I settled on the <code>numpy convolve</code> method with <code>my_average</code> to improve the edge behavior.</p>
+","14053391","","14053391","","2020-10-12 10:31:59","2020-10-12 10:31:59","","","","0","","","","CC BY-SA 4.0"
+"34398794","2","","34398676","2015-12-21 15:10:02","","162","","<ol>
+<li><p>Conda replaces virtualenv. In my opinion it is better. It is not limited to Python but can be used for other languages too. In my experience it provides a much smoother experience, especially for scientific packages. The first time I got MayaVi properly installed on Mac was with <code>conda</code>.   </p></li>
+<li><p>You can still use <code>pip</code>. In fact, <code>conda</code> installs <code>pip</code> in each new environment. It knows about pip-installed packages.</p></li>
+</ol>
+
+<p>For example:</p>
+
+<pre><code>conda list
+</code></pre>
+
+<p>lists all installed packages in your current environment.
+Conda-installed packages show up like this:</p>
+
+<pre><code>sphinx_rtd_theme          0.1.7                    py35_0    defaults
+</code></pre>
+
+<p>and the ones installed via <code>pip</code> have the <code>&lt;pip&gt;</code> marker:</p>
+
+<pre><code>wxpython-common           3.0.0.0                   &lt;pip&gt;
+</code></pre>
+","837534","","-1","","2019-11-26 11:06:44","2019-11-26 11:06:44","","","","6","","","","CC BY-SA 4.0"
+"34398795","2","","34398676","2015-12-21 15:10:12","","63","","<p>Short answer is, you only need conda.</p>
+
+<ol>
+<li><p>Conda effectively combines the functionality of pip and virtualenv in a single package, so you do not need virtualenv if you are using conda.</p></li>
+<li><p>You would be surprised how many packages conda supports. If it is not enough, you can use pip under conda.</p></li>
+</ol>
+
+<p>Here is a link to the conda page comparing conda, pip and virtualenv: </p>
+
+<p><a href=""https://docs.conda.io/projects/conda/en/latest/commands.html#conda-vs-pip-vs-virtualenv-commands"" rel=""noreferrer"">https://docs.conda.io/projects/conda/en/latest/commands.html#conda-vs-pip-vs-virtualenv-commands</a>.</p>
+","2988730","","8769958","","2019-03-12 16:55:28","2019-03-12 16:55:28","","","","0","","","","CC BY-SA 4.0"
+"38220776","2","","34398676","2016-07-06 09:36:28","","36","","<p><strong>Virtual Environments and <code>pip</code></strong></p>
+
+<p>I will add that <a href=""https://conda.io/docs/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands"" rel=""noreferrer"">creating</a> and <a href=""https://conda.io/docs/user-guide/tasks/manage-environments.html#removing-an-environment"" rel=""noreferrer"">removing</a> conda environments is simple with Anaconda.</p>
+
+<pre><code>&gt; conda create --name &lt;envname&gt; python=&lt;version&gt; &lt;optional dependencies&gt;
+
+&gt; conda remove --name &lt;envname&gt; --all 
+</code></pre>
+
+<p>In an <a href=""https://conda.io/docs/user-guide/tasks/manage-environments.html#activating-an-environment"" rel=""noreferrer"">activated environment</a>, install packages via <code>conda</code> or <code>pip</code>:</p>
+
+<pre><code>(envname)&gt; conda install &lt;package&gt;
+
+(envname)&gt; pip install &lt;package&gt;
+</code></pre>
+
+<p>These environments are strongly tied to <a href=""http://conda.pydata.org/docs/using/pkgs.html"" rel=""noreferrer"">conda's pip-like package management</a>, so it is simple to create environments and install both Python and non-Python packages.</p>
+
+<hr>
+
+<p><strong>Jupyter</strong></p>
+
+<p>In addition, <a href=""https://stackoverflow.com/questions/39604271/conda-environments-not-showing-up-in-jupyter-notebook"">installing <code>ipykernel</code></a> in an environment adds a new listing in the Kernels dropdown menu of Jupyter notebooks, extending reproducible environments to notebooks.  As of Anaconda 4.1, <a href=""https://docs.continuum.io/anaconda/changelog"" rel=""noreferrer"">nbextensions were added</a>, adding extensions to notebooks more easily.</p>
+
+<p><strong>Reliability</strong></p>
+
+<p>In my experience, conda is faster and more reliable at installing large libraries such as <code>numpy</code> and <code>pandas</code>.  Moreover, if you wish to transfer your the preserved state of an environment, you can do so by <a href=""https://conda.io/docs/user-guide/tasks/manage-environments.html#sharing-an-environment"" rel=""noreferrer"">sharing</a> or <a href=""https://conda.io/docs/user-guide/tasks/manage-environments.html#cloning-an-environment"" rel=""noreferrer"">cloning</a> an env.</p>
+","4531270","","4531270","","2018-07-12 22:46:25","2018-07-12 22:46:25","","","","0","","","","CC BY-SA 4.0"
+"48982620","2","","34398676","2018-02-26 06:27:34","","18","","<p>Installing Conda will enable you to create and remove python environments as you wish, therefore providing you with same functionality as <a href=""https://virtualenv.pypa.io/en/stable/"" rel=""noreferrer"">virtualenv</a> would.</p>
+
+<p>In case of both distributions you would be able to create an isolated filesystem tree, where you can install and remove python packages (probably, with pip) as you wish. Which might come in handy if you want to have different versions of same library for different use cases or you just want to try some distribution and remove it afterwards conserving your disk space.</p>
+
+<h3>Differences:</h3>
+
+<p>License agreement. While virtualenv comes under most liberal <a href=""https://opensource.org/licenses/MIT"" rel=""noreferrer"">MIT license</a>, <a href=""https://conda.io/docs/license.html"" rel=""noreferrer"">Conda</a> uses 3 clause BSD license.</p>
+
+<p>Conda provides you with their own package control system. This package control system often provides precompiled versions (for most popular systems) of popular non-python software, which can easy ones way getting some machine learning packages working. Namely you don't have to compile optimized C/C++ code for you system. While it is a great relief for most of us, it might affect performance of such libraries.</p>
+
+<p>Unlike virtualenv, Conda duplicating some system libraries at least on Linux system. This libraries can get out of sync leading to inconsistent behavior of your programs.</p>
+
+<h3>Verdict:</h3>
+
+<p>Conda is great and should be your default choice while starting your way with machine learning. It will save you some time messing with gcc and numerous packages. Yet, Conda does not replace virtualenv. It introduces some additional complexity which might not always be desired. It comes under different license. You might want to avoid using conda on a distributed environments or on HPC hardware. </p>
+","867889","","1083422","","2019-06-25 08:05:19","2019-06-25 08:05:19","","","","2","","","","CC BY-SA 4.0"
+"49084152","2","","34398676","2018-03-03 12:32:41","","11","","<p>Another new option and my current preferred method of getting an environment up and running is <a href=""https://pipenv.kennethreitz.org/"" rel=""nofollow noreferrer"">Pipenv</a></p>
+
+<p>It is currently the officially recommended Python packaging tool from Python.org</p>
+","541729","","100297","","2020-02-28 01:14:16","2020-02-28 01:14:16","","","","4","","","","CC BY-SA 4.0"
+"59755292","2","","34398676","2020-01-15 16:06:06","","16","","<p>I use both and (as of Jan, 2020) they have some superficial differences that lend themselves to different usages for me.  By <em>default</em> Conda prefers to manage a list of environments for you in a central location, whereas virtualenv makes a folder in the current directory.  The former (centralized) makes sense if you are e.g. doing machine learning and just have a couple of broad environments that you use across many projects and want to jump into them from anywhere.  The latter (per project folder) makes sense if you are doing little one-off projects that have completely different sets of lib requirements that really belong more to the project itself.</p>
+
+<p>The empty environment that Conda creates is about 122MB whereas the virtualenv's is about 12MB, so that's another reason you may prefer not to scatter Conda environments around everywhere.</p>
+
+<p>Finally, another superficial indication that Conda prefers its centralized envs is that (again, by default) if you do create a Conda env in your own project folder and activate it the name prefix that appears in your shell is the (way too long) absolute path to the folder.  You can fix that by giving it a name, but virtualenv does the right thing by default.</p>
+
+<p>I expect this info to become stale rapidly as the two package managers vie for dominance, but these are the trade-offs as of today :)</p>
+","74975","","","","","2020-01-15 16:06:06","","","","1","","","","CC BY-SA 4.0"

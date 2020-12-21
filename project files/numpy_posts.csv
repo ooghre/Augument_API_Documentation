@@ -1,0 +1,2077 @@
+Id,PostTypeId,AcceptedAnswerId,ParentId,CreationDate,DeletionDate,Score,ViewCount,Body,OwnerUserId,OwnerDisplayName,LastEditorUserId,LastEditorDisplayName,LastEditDate,LastActivityDate,Title,Tags,AnswerCount,CommentCount,FavoriteCount,ClosedDate,CommunityOwnedDate,ContentLicense
+"432175","2","","432112","2009-01-11 02:04:27","","6","","<p>To index on any criteria, you can so something like the following:</p>
+
+<pre><code>In [1]: from numpy import *
+In [2]: x = arange(125).reshape((5,5,5))
+In [3]: y = indices(x.shape)
+In [4]: locs = y[:,x &gt;= 120] # put whatever you want in place of x &gt;= 120
+In [5]: pts = hsplit(locs, len(locs[0]))
+In [6]: for pt in pts:
+   .....:         print(', '.join(str(p[0]) for p in pt))
+4, 4, 0
+4, 4, 1
+4, 4, 2
+4, 4, 3
+4, 4, 4
+</code></pre>
+
+<p>And here's a quick function to do what list.index() does, except doesn't raise an exception if it's not found. Beware -- this is probably very slow on large arrays.  You can probably monkey patch this on to arrays if you'd rather use it as a method.</p>
+
+<pre><code>def ndindex(ndarray, item):
+    if len(ndarray.shape) == 1:
+        try:
+            return [ndarray.tolist().index(item)]
+        except:
+            pass
+    else:
+        for i, subarray in enumerate(ndarray):
+            try:
+                return [i] + ndindex(subarray, item)
+            except:
+                pass
+
+In [1]: ndindex(x, 103)
+Out[1]: [4, 0, 3]
+</code></pre>
+","49994","Autoplectic","63550","Autoplectic","2018-06-26 20:14:10","2018-06-26 20:14:10","","","","0","","","","CC BY-SA 4.0"
+"432289","2","","432112","2009-01-11 03:12:03","","551","","<p>Yes, given an array, <code>array</code>, and a value, <code>item</code> to search for, you can use <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.where.html"" rel=""noreferrer""><code>np.where</code></a> as:</p>
+<pre><code>itemindex = numpy.where(array==item)
+</code></pre>
+<p>The result is a tuple with first all the row indices, then all the column indices.</p>
+<p>For example, if an array is two dimensions and it contained your item at two locations then</p>
+<pre><code>array[itemindex[0][0]][itemindex[1][0]]
+</code></pre>
+<p>would be equal to your item and so would be:</p>
+<pre><code>array[itemindex[0][1]][itemindex[1][1]]
+</code></pre>
+","30181","Alex","9698684","Alex","2020-10-09 21:37:55","2020-10-09 21:37:55","","","","7","","","","CC BY-SA 4.0"
+"432325","2","","432112","2009-01-11 03:52:49","","14","","<p>If you're going to use this as an index into something else, you can use boolean indices if the arrays are broadcastable; you don't need explicit indices.  The absolute simplest way to do this is to simply index based on a truth value.</p>
+
+<pre><code>other_array[first_array == item]
+</code></pre>
+
+<p>Any boolean operation works:</p>
+
+<pre><code>a = numpy.arange(100)
+other_array[first_array &gt; 50]
+</code></pre>
+
+<p>The nonzero method takes booleans, too:</p>
+
+<pre><code>index = numpy.nonzero(first_array == item)[0][0]
+</code></pre>
+
+<p>The two zeros are for the tuple of indices (assuming first_array is 1D) and then the first item in the array of indices.</p>
+","49135","Matt","","","","2009-01-11 03:52:49","","","","0","","","","CC BY-SA 2.5"
+"1044443","2","","432112","2009-06-25 15:01:00","","77","","<p>If you need the index of the first occurrence of <strong>only one value</strong>, you can use <code>nonzero</code> (or <code>where</code>, which amounts to the same thing in this case):</p>
+
+<pre><code>&gt;&gt;&gt; t = array([1, 1, 1, 2, 2, 3, 8, 3, 8, 8])
+&gt;&gt;&gt; nonzero(t == 8)
+(array([6, 8, 9]),)
+&gt;&gt;&gt; nonzero(t == 8)[0][0]
+6
+</code></pre>
+
+<p>If you need the first index of each of <strong>many values</strong>, you could obviously do the same as above repeatedly, but there is a trick that may be faster.  The following finds the indices of the first element of each <em>subsequence</em>:</p>
+
+<pre><code>&gt;&gt;&gt; nonzero(r_[1, diff(t)[:-1]])
+(array([0, 3, 5, 6, 7, 8]),)
+</code></pre>
+
+<p>Notice that it finds the beginning of both subsequence of 3s and both subsequences of 8s:</p>
+
+<p>[<strong>1</strong>, 1, 1, <strong>2</strong>, 2, <strong>3</strong>, <strong>8</strong>, <strong>3</strong>, <strong>8</strong>, 8]</p>
+
+<p>So it's slightly different than finding the first <em>occurrence</em> of each value.  In your program, you may be able to work with a sorted version of <code>t</code> to get what you want:</p>
+
+<pre><code>&gt;&gt;&gt; st = sorted(t)
+&gt;&gt;&gt; nonzero(r_[1, diff(st)[:-1]])
+(array([0, 3, 5, 7]),)
+</code></pre>
+","17498","","","","","2009-06-25 15:01:00","","","","6","","","","CC BY-SA 2.5"
+"23994923","2","","432112","2014-06-02 12:47:58","","51","","<p>You can also convert a NumPy array to list in the air and get its index. For example,</p>
+
+<pre><code>l = [1,2,3,4,5] # Python list
+a = numpy.array(l) # NumPy array
+i = a.tolist().index(2) # i will return index of 2
+print i
+</code></pre>
+
+<p>It will print 1.</p>
+","2703401","","63550","","2018-06-26 20:15:38","2018-06-26 20:15:38","","","","4","","","","CC BY-SA 4.0"
+"41578614","2","","432112","2017-01-10 21:19:57","","20","","<p>Just to add a very performant and handy <a href=""/questions/tagged/numba"" class=""post-tag"" title=""show questions tagged &#39;numba&#39;"" rel=""tag"">numba</a> alternative based on <a href=""https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndenumerate.html"" rel=""noreferrer""><code>np.ndenumerate</code></a> to find the first index:</p>
+
+<pre><code>from numba import njit
+import numpy as np
+
+@njit
+def index(array, item):
+    for idx, val in np.ndenumerate(array):
+        if val == item:
+            return idx
+    # If no item was found return None, other return types might be a problem due to
+    # numbas type inference.
+</code></pre>
+
+<p>This is pretty fast and <em>deals naturally with multidimensional arrays</em>:</p>
+
+<pre><code>&gt;&gt;&gt; arr1 = np.ones((100, 100, 100))
+&gt;&gt;&gt; arr1[2, 2, 2] = 2
+
+&gt;&gt;&gt; index(arr1, 2)
+(2, 2, 2)
+
+&gt;&gt;&gt; arr2 = np.ones(20)
+&gt;&gt;&gt; arr2[5] = 2
+
+&gt;&gt;&gt; index(arr2, 2)
+(5,)
+</code></pre>
+
+<p>This can be <strong>much faster</strong> (because it's short-circuiting the operation) than any approach using <code>np.where</code> or <code>np.nonzero</code>.</p>
+
+<hr>
+
+<p>However <a href=""https://docs.scipy.org/doc/numpy/reference/generated/numpy.argwhere.html"" rel=""noreferrer""><code>np.argwhere</code></a> could also deal <em>gracefully</em> with multidimensional arrays (you would need to manually cast it to a tuple <strong>and</strong> it's not short-circuited) but it would fail if no match is found:</p>
+
+<pre><code>&gt;&gt;&gt; tuple(np.argwhere(arr1 == 2)[0])
+(2, 2, 2)
+&gt;&gt;&gt; tuple(np.argwhere(arr2 == 2)[0])
+(5,)
+</code></pre>
+","5393381","","5393381","","2018-01-18 09:38:08","2018-01-18 09:38:08","","","","2","","","","CC BY-SA 3.0"
+"43821453","2","","432112","2017-05-06 14:12:30","","12","","<p><code>l.index(x)</code> returns the smallest <em>i</em> such that <em>i</em> is the index of the first occurrence of x in the list.</p>
+
+<p>One can safely assume that the <code>index()</code> function in Python is implemented so that it stops after finding the first match, and this results in an optimal average performance.</p>
+
+<p>For finding an element stopping after the first match in a NumPy array use an iterator (<a href=""https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndenumerate.html"" rel=""noreferrer"">ndenumerate</a>).</p>
+
+<pre><code>In [67]: l=range(100)
+
+In [68]: l.index(2)
+Out[68]: 2
+</code></pre>
+
+<p>NumPy array:</p>
+
+<pre><code>In [69]: a = np.arange(100)
+
+In [70]: next((idx for idx, val in np.ndenumerate(a) if val==2))
+Out[70]: (2L,)
+</code></pre>
+
+<p>Note that both methods <code>index()</code> and <code>next</code> return an error if the element is not found. With <code>next</code>, one can use a second argument to return a special value in case the element is not found, e.g.</p>
+
+<pre><code>In [77]: next((idx for idx, val in np.ndenumerate(a) if val==400),None)
+</code></pre>
+
+<p>There are other functions in NumPy (<code>argmax</code>, <code>where</code>, and <code>nonzero</code>) that can be used to find an element in an array, but they all have the drawback of going through the whole array looking for <em>all</em> occurrences, thus not being optimized for finding the first element. Note also that <code>where</code> and <code>nonzero</code> return arrays, so you need to select the first element to get the index.</p>
+
+<pre><code>In [71]: np.argmax(a==2)
+Out[71]: 2
+
+In [72]: np.where(a==2)
+Out[72]: (array([2], dtype=int64),)
+
+In [73]: np.nonzero(a==2)
+Out[73]: (array([2], dtype=int64),)
+</code></pre>
+
+<h3>Time comparison</h3>
+
+<p>Just checking that for large arrays the solution using an iterator is faster <em>when the searched item is at the beginning of the array</em> (using <code>%timeit</code> in the IPython shell):</p>
+
+<pre><code>In [285]: a = np.arange(100000)
+
+In [286]: %timeit next((idx for idx, val in np.ndenumerate(a) if val==0))
+100000 loops, best of 3: 17.6 µs per loop
+
+In [287]: %timeit np.argmax(a==0)
+1000 loops, best of 3: 254 µs per loop
+
+In [288]: %timeit np.where(a==0)[0][0]
+1000 loops, best of 3: 314 µs per loop
+</code></pre>
+
+<hr>
+
+<p>This is an open <a href=""https://github.com/numpy/numpy/issues/2269"" rel=""noreferrer"">NumPy GitHub issue</a>.</p>
+
+<p>See also: <a href=""https://stackoverflow.com/q/7632963/2314737"">Numpy: find first index of value fast</a></p>
+","2314737","","63550","","2018-06-26 20:21:23","2018-06-26 20:21:23","","","","7","","","","CC BY-SA 4.0"
+"49875727","2","","432112","2018-04-17 10:28:52","","10","","<p>For one-dimensional <strong>sorted</strong> arrays, it would be much more simpler and efficient O(log(n)) to use <a href=""https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.searchsorted.html#numpy.searchsorted"" rel=""noreferrer"">numpy.searchsorted</a> which returns a NumPy integer (position). For example,</p>
+
+<pre><code>arr = np.array([1, 1, 1, 2, 3, 3, 4])
+i = np.searchsorted(arr, 3)
+</code></pre>
+
+<p>Just make sure the array is already sorted</p>
+
+<p>Also check if returned index i actually contains the searched element, since searchsorted's main objective is to find indices where elements should be inserted to maintain order.</p>
+
+<pre><code>if arr[i] == 3:
+    print(""present"")
+else:
+    print(""not present"")
+</code></pre>
+","1756427","","1756427","","2018-11-23 19:57:30","2018-11-23 19:57:30","","","","1","","","","CC BY-SA 4.0"
+"994010","2","","993984","2009-06-14 23:16:23","","752","","<p>NumPy's arrays are more compact than Python lists -- a list of lists as you describe, in Python, would take at least 20 MB or so, while a NumPy 3D array with single-precision floats in the cells would fit in 4 MB. Access in reading and writing items is also faster with NumPy.</p>
+
+<p>Maybe you don't care that much for just a million cells, but you definitely would for a billion cells -- neither approach would fit in a 32-bit architecture, but with 64-bit builds NumPy would get away with 4 GB or so, Python alone would need at least about 12 GB (lots of pointers which double in size) -- a much costlier piece of hardware!</p>
+
+<p>The difference is mostly due to ""indirectness"" -- a Python list is an array of pointers to Python objects, at least 4 bytes per pointer plus 16 bytes for even the smallest Python object (4 for type pointer, 4 for reference count, 4 for value -- and the memory allocators rounds up to 16). A NumPy array is an array of uniform values -- single-precision numbers takes 4 bytes each, double-precision ones, 8 bytes. Less flexible, but you pay substantially for the flexibility of standard Python lists!</p>
+","95810","","63550","","2010-11-29 11:55:46","2010-11-29 11:55:46","","","","8","","","","CC BY-SA 2.5"
+"994049","2","","993984","2009-06-14 23:38:50","","240","","<p>NumPy is not just more efficient; it is also more convenient. You get a lot of vector and matrix operations for free, which sometimes allow one to avoid unnecessary work. And they are also efficiently implemented.</p>
+
+<p>For example, you could read your cube directly from a file into an array:</p>
+
+<pre><code>x = numpy.fromfile(file=open(""data""), dtype=float).reshape((100, 100, 100))
+</code></pre>
+
+<p>Sum along the second dimension:</p>
+
+<pre><code>s = x.sum(axis=1)
+</code></pre>
+
+<p>Find which cells are above a threshold:</p>
+
+<pre><code>(x &gt; 0.5).nonzero()
+</code></pre>
+
+<p>Remove every even-indexed slice along the third dimension:</p>
+
+<pre><code>x[:, :, ::2]
+</code></pre>
+
+<p>Also, many useful libraries work with NumPy arrays.  For example, statistical analysis and visualization libraries.</p>
+
+<p>Even if you don't have performance problems, learning NumPy is worth the effort.</p>
+","13169","","13169","","2017-02-28 01:53:30","2017-02-28 01:53:30","","","","1","","","","CC BY-SA 3.0"
+"994545","2","","993984","2009-06-15 04:59:38","","115","","<p>Alex mentioned memory efficiency, and Roberto mentions convenience, and these are both good points. For a few more ideas, I'll mention <strong>speed</strong> and <strong>functionality</strong>.</p>
+
+<p>Functionality: You get a lot built in with NumPy, FFTs, convolutions, fast searching, basic statistics, linear algebra, histograms, etc. And really, who can live without FFTs?</p>
+
+<p>Speed: Here's a test on doing a sum over a list and a NumPy array, showing that the sum on the NumPy array is 10x faster (in this test -- mileage may vary).</p>
+
+<pre><code>from numpy import arange
+from timeit import Timer
+
+Nelements = 10000
+Ntimeits = 10000
+
+x = arange(Nelements)
+y = range(Nelements)
+
+t_numpy = Timer(""x.sum()"", ""from __main__ import x"")
+t_list = Timer(""sum(y)"", ""from __main__ import y"")
+print(""numpy: %.3e"" % (t_numpy.timeit(Ntimeits)/Ntimeits,))
+print(""list:  %.3e"" % (t_list.timeit(Ntimeits)/Ntimeits,))
+</code></pre>
+
+<p>which on my systems (while I'm running a backup) gives:</p>
+
+<pre><code>numpy: 3.004e-05
+list:  5.363e-04
+</code></pre>
+","102302","","137794","","2017-08-01 18:18:30","2017-08-01 18:18:30","","","","0","","","","CC BY-SA 3.0"
+"25778164","2","","993984","2014-09-11 02:35:09","","46","","<p>Here's a nice answer from the FAQ on the <a href=""http://www.scipy.org/scipylib/faq.html#what-advantages-do-numpy-arrays-offer-over-nested-python-lists"" rel=""noreferrer"">scipy.org website</a>:</p>
+
+<p><strong>What advantages do NumPy arrays offer over (nested) Python lists?</strong></p>
+
+<blockquote>
+  <p>Python’s lists are efficient general-purpose containers. They support
+  (fairly) efficient insertion, deletion, appending, and concatenation,
+  and Python’s list comprehensions make them easy to construct and
+  manipulate. However, they have certain limitations: they don’t support
+  “vectorized” operations like elementwise addition and multiplication,
+  and the fact that they can contain objects of differing types mean
+  that Python must store type information for every element, and must
+  execute type dispatching code when operating on each element. This
+  also means that very few list operations can be carried out by
+  efficient C loops – each iteration would require type checks and other
+  Python API bookkeeping.</p>
+</blockquote>
+","1180742","","771848","","2017-01-19 15:17:38","2017-01-19 15:17:38","","","","0","","","","CC BY-SA 3.0"
+"54534773","2","","993984","2019-02-05 12:46:45","","12","","<p>All have highlighted almost all major differences between numpy array and python list, I will just brief them out here:</p>
+
+<ol>
+<li><p>Numpy arrays have a fixed size at creation, unlike python lists (which can grow dynamically). Changing the size of ndarray will create a new array and delete the original.</p></li>
+<li><p>The elements in a Numpy array are all required to be of the same data type (we can have the heterogeneous type as well but that will not gonna permit you mathematical operations) and thus will be the same size in memory</p></li>
+<li><p>Numpy arrays are facilitated advances mathematical and other types of operations on large numbers of data. Typically such operations are executed more efficiently and with less code than is possible using pythons build in sequences</p></li>
+</ol>
+","5536013","","","","","2019-02-05 12:46:45","","","","0","","","","CC BY-SA 4.0"
+"1401755","2","","1401712","2009-09-09 19:56:36","","37","","<p>Another instance of <a href=""https://stackoverflow.com/questions/13289/can-you-share-your-secrets-or-best-practices-for-problem-solving/13336#13336"">this problem solving method</a>:</p>
+
+<pre><code>def dist(x,y):   
+    return numpy.sqrt(numpy.sum((x-y)**2))
+
+a = numpy.array((xa,ya,za))
+b = numpy.array((xb,yb,zb))
+dist_a_b = dist(a,b)
+</code></pre>
+","1084","","63550","","2018-06-26 20:43:26","2018-06-26 20:43:26","","","","3","","","","CC BY-SA 4.0"
+"1401828","2","","1401712","2009-09-09 20:12:50","","971","","<p>Use <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.norm.html"" rel=""noreferrer""><code>numpy.linalg.norm</code></a>:</p>
+<pre><code>dist = numpy.linalg.norm(a-b)
+</code></pre>
+<p>You can find the theory behind this in <a href=""https://rads.stackoverflow.com/amzn/click/com/0321321367"" rel=""noreferrer"" rel=""nofollow noreferrer"">Introduction to Data Mining</a></p>
+<p>This works because the <strong>Euclidean distance</strong> is the <strong>l2 norm</strong>, and the default value of the <strong>ord</strong> parameter in <code>numpy.linalg.norm</code> is 2.</p>
+<p><a href=""https://i.stack.imgur.com/iWe4J.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/iWe4J.png"" alt=""enter image description here"" /></a></p>
+","137317","","9698684","","2020-10-09 21:39:45","2020-10-09 21:39:45","","","","7","","","","CC BY-SA 4.0"
+"4169284","2","","1401712","2010-11-12 21:40:53","","10","","<p>A nice one-liner:</p>
+
+<pre><code>dist = numpy.linalg.norm(a-b)
+</code></pre>
+
+<hr>
+
+<p>However, if speed is a concern I would recommend experimenting on your machine. I've found that using <code>math</code> library's <code>sqrt</code> with the <code>**</code> operator for the square is much faster on my machine than the one-liner NumPy solution.</p>
+
+<p>I ran my tests using this simple program:</p>
+
+<pre><code>#!/usr/bin/python
+import math
+import numpy
+from random import uniform
+
+def fastest_calc_dist(p1,p2):
+    return math.sqrt((p2[0] - p1[0]) ** 2 +
+                     (p2[1] - p1[1]) ** 2 +
+                     (p2[2] - p1[2]) ** 2)
+
+def math_calc_dist(p1,p2):
+    return math.sqrt(math.pow((p2[0] - p1[0]), 2) +
+                     math.pow((p2[1] - p1[1]), 2) +
+                     math.pow((p2[2] - p1[2]), 2))
+
+def numpy_calc_dist(p1,p2):
+    return numpy.linalg.norm(numpy.array(p1)-numpy.array(p2))
+
+TOTAL_LOCATIONS = 1000
+
+p1 = dict()
+p2 = dict()
+for i in range(0, TOTAL_LOCATIONS):
+    p1[i] = (uniform(0,1000),uniform(0,1000),uniform(0,1000))
+    p2[i] = (uniform(0,1000),uniform(0,1000),uniform(0,1000))
+
+total_dist = 0
+for i in range(0, TOTAL_LOCATIONS):
+    for j in range(0, TOTAL_LOCATIONS):
+        dist = fastest_calc_dist(p1[i], p2[j]) #change this line for testing
+        total_dist += dist
+
+print total_dist
+</code></pre>
+
+<p>On my machine, <code>math_calc_dist</code> runs much faster than <code>numpy_calc_dist</code>: 1.5 seconds versus 23.5 seconds.</p>
+
+<p>To get a measurable difference between <code>fastest_calc_dist</code> and <code>math_calc_dist</code> I had to up <code>TOTAL_LOCATIONS</code> to 6000. Then <code>fastest_calc_dist</code> takes ~50 seconds while <code>math_calc_dist</code> takes ~60 seconds.</p>
+
+<p>You can also experiment with <code>numpy.sqrt</code> and <code>numpy.square</code> though both were slower than the <code>math</code> alternatives on my machine.</p>
+
+<p>My tests were run with Python 2.6.6.</p>
+","118662","","9297144","","2020-04-19 06:31:46","2020-04-19 06:31:46","","","","6","","","","CC BY-SA 4.0"
+"7373947","2","","1401712","2011-09-10 19:08:12","","8","","<p>You can just subtract the vectors and then innerproduct.</p>
+<p>Following your example,</p>
+<pre><code>a = numpy.array((xa, ya, za))
+b = numpy.array((xb, yb, zb))
+
+tmp = a - b
+sum_squared = numpy.dot(tmp.T, tmp)
+result = numpy.sqrt(sum_squared)
+</code></pre>
+","357198","","7032512","","2020-10-21 05:40:12","2020-10-21 05:40:12","","","","1","","","","CC BY-SA 4.0"
+"13155932","2","","1401712","2012-10-31 10:33:48","","12","","<p>It can be done like the following. I don't know how fast it is, but it's not using NumPy.</p>
+
+<pre><code>from math import sqrt
+a = (1, 2, 3) # Data point 1
+b = (4, 5, 6) # Data point 2
+print sqrt(sum( (a - b)**2 for a, b in zip(a, b)))
+</code></pre>
+","844700","","63550","","2018-06-26 20:47:41","2018-06-26 20:47:41","","","","2","","","","CC BY-SA 4.0"
+"20943162","2","","1401712","2014-01-06 04:46:53","","10","","<p>I find a 'dist' function in matplotlib.mlab, but I don't think it's handy enough. </p>
+
+<p>I'm posting it here just for reference.</p>
+
+<pre><code>import numpy as np
+import matplotlib as plt
+
+a = np.array([1, 2, 3])
+b = np.array([2, 3, 4])
+
+# Distance between a and b
+dis = plt.mlab.dist(a, b)
+</code></pre>
+","3068373","","63550","","2018-06-26 20:48:32","2018-06-26 20:48:32","","","","1","","","","CC BY-SA 4.0"
+"21986532","2","","1401712","2014-02-24 11:32:29","","176","","<p>There's a function for that in SciPy. It's called <a href=""http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.euclidean.html#scipy.spatial.distance.euclidean"" rel=""noreferrer"">Euclidean</a>.</p>
+
+<p>Example:</p>
+
+<pre><code>from scipy.spatial import distance
+a = (1, 2, 3)
+b = (4, 5, 6)
+dst = distance.euclidean(a, b)
+</code></pre>
+","1622963","","63550","","2018-06-26 20:49:08","2018-06-26 20:49:08","","","","6","","","","CC BY-SA 4.0"
+"39301337","2","","1401712","2016-09-02 22:14:11","","8","","<p>I like <code>np.dot</code> (dot product): </p>
+
+<pre><code>a = numpy.array((xa,ya,za))
+b = numpy.array((xb,yb,zb))
+
+distance = (np.dot(a-b,a-b))**.5
+</code></pre>
+","2487607","","9297144","","2019-03-01 16:18:10","2019-03-01 16:18:10","","","","0","","","","CC BY-SA 4.0"
+"41365387","2","","1401712","2016-12-28 15:48:41","","6","","<p>Having <code>a</code> and <code>b</code> as you defined them, you can use also:</p>
+
+<pre><code>distance = np.sqrt(np.sum((a-b)**2))
+</code></pre>
+","2328443","","2414957","","2017-11-03 11:18:56","2017-11-03 11:18:56","","","","0","","","","CC BY-SA 3.0"
+"47542304","2","","1401712","2017-11-28 22:54:12","","44","","<p>I want to expound on the simple answer with various performance notes. np.linalg.norm will do perhaps more than you need:</p>
+
+<pre><code>dist = numpy.linalg.norm(a-b)
+</code></pre>
+
+<p>Firstly - this function is designed to work over a list and return all of the values, e.g. to compare the distance from <code>pA</code> to the set of points <code>sP</code>:</p>
+
+<pre><code>sP = set(points)
+pA = point
+distances = np.linalg.norm(sP - pA, ord=2, axis=1.)  # 'distances' is a list
+</code></pre>
+
+<p>Remember several things:</p>
+
+<ul>
+<li>Python function calls are expensive.</li>
+<li>[Regular] Python doesn't cache name lookups.</li>
+</ul>
+
+<p>So</p>
+
+<pre><code>def distance(pointA, pointB):
+    dist = np.linalg.norm(pointA - pointB)
+    return dist
+</code></pre>
+
+<p>isn't as innocent as it looks.</p>
+
+<pre><code>&gt;&gt;&gt; dis.dis(distance)
+  2           0 LOAD_GLOBAL              0 (np)
+              2 LOAD_ATTR                1 (linalg)
+              4 LOAD_ATTR                2 (norm)
+              6 LOAD_FAST                0 (pointA)
+              8 LOAD_FAST                1 (pointB)
+             10 BINARY_SUBTRACT
+             12 CALL_FUNCTION            1
+             14 STORE_FAST               2 (dist)
+
+  3          16 LOAD_FAST                2 (dist)
+             18 RETURN_VALUE
+</code></pre>
+
+<p>Firstly - every time we call it, we have to do a global lookup for ""np"", a scoped lookup for ""linalg"" and a scoped lookup for ""norm"", and the overhead of merely <em>calling</em> the function can equate to dozens of python instructions.</p>
+
+<p>Lastly, we wasted two operations on to store the result and reload it for return...</p>
+
+<p>First pass at improvement: make the lookup faster, skip the store</p>
+
+<pre><code>def distance(pointA, pointB, _norm=np.linalg.norm):
+    return _norm(pointA - pointB)
+</code></pre>
+
+<p>We get the far more streamlined:</p>
+
+<pre><code>&gt;&gt;&gt; dis.dis(distance)
+  2           0 LOAD_FAST                2 (_norm)
+              2 LOAD_FAST                0 (pointA)
+              4 LOAD_FAST                1 (pointB)
+              6 BINARY_SUBTRACT
+              8 CALL_FUNCTION            1
+             10 RETURN_VALUE
+</code></pre>
+
+<p>The function call overhead still amounts to some work, though. And you'll want to do benchmarks to determine whether you might be better doing the math yourself:</p>
+
+<pre><code>def distance(pointA, pointB):
+    return (
+        ((pointA.x - pointB.x) ** 2) +
+        ((pointA.y - pointB.y) ** 2) +
+        ((pointA.z - pointB.z) ** 2)
+    ) ** 0.5  # fast sqrt
+</code></pre>
+
+<p>On some platforms, <code>**0.5</code> is faster than <code>math.sqrt</code>. Your mileage may vary.</p>
+
+<p>**** Advanced performance notes.</p>
+
+<p>Why are you calculating distance? If the sole purpose is to display it,</p>
+
+<pre><code> print(""The target is %.2fm away"" % (distance(a, b)))
+</code></pre>
+
+<p>move along. But if you're comparing distances, doing range checks, etc., I'd like to add some useful performance observations.</p>
+
+<p>Let’s take two cases: sorting by distance or culling a list to items that meet a range constraint.</p>
+
+<pre><code># Ultra naive implementations. Hold onto your hat.
+
+def sort_things_by_distance(origin, things):
+    return things.sort(key=lambda thing: distance(origin, thing))
+
+def in_range(origin, range, things):
+    things_in_range = []
+    for thing in things:
+        if distance(origin, thing) &lt;= range:
+            things_in_range.append(thing)
+</code></pre>
+
+<p>The first thing we need to remember is that we are using <a href=""https://en.wikipedia.org/wiki/Pythagoras#Mathematical_discoveries"" rel=""noreferrer"">Pythagoras</a> to calculate the distance (<code>dist = sqrt(x^2 + y^2 + z^2)</code>) so we're making a lot of <code>sqrt</code> calls. Math 101:</p>
+
+<pre><code>dist = root ( x^2 + y^2 + z^2 )
+:.
+dist^2 = x^2 + y^2 + z^2
+and
+sq(N) &lt; sq(M) iff M &gt; N
+and
+sq(N) &gt; sq(M) iff N &gt; M
+and
+sq(N) = sq(M) iff N == M
+</code></pre>
+
+<p>In short: until we actually require the distance in a unit of X rather than X^2, we can eliminate the hardest part of the calculations.</p>
+
+<pre><code># Still naive, but much faster.
+
+def distance_sq(left, right):
+    """""" Returns the square of the distance between left and right. """"""
+    return (
+        ((left.x - right.x) ** 2) +
+        ((left.y - right.y) ** 2) +
+        ((left.z - right.z) ** 2)
+    )
+
+def sort_things_by_distance(origin, things):
+    return things.sort(key=lambda thing: distance_sq(origin, thing))
+
+def in_range(origin, range, things):
+    things_in_range = []
+
+    # Remember that sqrt(N)**2 == N, so if we square
+    # range, we don't need to root the distances.
+    range_sq = range**2
+
+    for thing in things:
+        if distance_sq(origin, thing) &lt;= range_sq:
+            things_in_range.append(thing)
+</code></pre>
+
+<p>Great, both functions no-longer do any expensive square roots. That'll be much faster. We can also improve in_range by converting it to a generator:</p>
+
+<pre><code>def in_range(origin, range, things):
+    range_sq = range**2
+    yield from (thing for thing in things
+                if distance_sq(origin, thing) &lt;= range_sq)
+</code></pre>
+
+<p>This especially has benefits if you are doing something like:</p>
+
+<pre><code>if any(in_range(origin, max_dist, things)):
+    ...
+</code></pre>
+
+<p>But if the very next thing you are going to do requires a distance,</p>
+
+<pre><code>for nearby in in_range(origin, walking_distance, hotdog_stands):
+    print(""%s %.2fm"" % (nearby.name, distance(origin, nearby)))
+</code></pre>
+
+<p>consider yielding tuples:</p>
+
+<pre><code>def in_range_with_dist_sq(origin, range, things):
+    range_sq = range**2
+    for thing in things:
+        dist_sq = distance_sq(origin, thing)
+        if dist_sq &lt;= range_sq: yield (thing, dist_sq)
+</code></pre>
+
+<p>This can be especially useful if you might chain range checks ('find things that are near X and within Nm of Y', since you don't have to calculate the distance again).</p>
+
+<p>But what about if we're searching a really large list of <code>things</code> and we anticipate a lot of them not being worth consideration?</p>
+
+<p>There is actually a very simple optimization:</p>
+
+<pre><code>def in_range_all_the_things(origin, range, things):
+    range_sq = range**2
+    for thing in things:
+        dist_sq = (origin.x - thing.x) ** 2
+        if dist_sq &lt;= range_sq:
+            dist_sq += (origin.y - thing.y) ** 2
+            if dist_sq &lt;= range_sq:
+                dist_sq += (origin.z - thing.z) ** 2
+                if dist_sq &lt;= range_sq:
+                    yield thing
+</code></pre>
+
+<p>Whether this is useful will depend on the size of 'things'.</p>
+
+<pre><code>def in_range_all_the_things(origin, range, things):
+    range_sq = range**2
+    if len(things) &gt;= 4096:
+        for thing in things:
+            dist_sq = (origin.x - thing.x) ** 2
+            if dist_sq &lt;= range_sq:
+                dist_sq += (origin.y - thing.y) ** 2
+                if dist_sq &lt;= range_sq:
+                    dist_sq += (origin.z - thing.z) ** 2
+                    if dist_sq &lt;= range_sq:
+                        yield thing
+    elif len(things) &gt; 32:
+        for things in things:
+            dist_sq = (origin.x - thing.x) ** 2
+            if dist_sq &lt;= range_sq:
+                dist_sq += (origin.y - thing.y) ** 2 + (origin.z - thing.z) ** 2
+                if dist_sq &lt;= range_sq:
+                    yield thing
+    else:
+        ... just calculate distance and range-check it ...
+</code></pre>
+
+<p>And again, consider yielding the dist_sq. Our hotdog example then becomes:</p>
+
+<pre><code># Chaining generators
+info = in_range_with_dist_sq(origin, walking_distance, hotdog_stands)
+info = (stand, dist_sq**0.5 for stand, dist_sq in info)
+for stand, dist in info:
+    print(""%s %.2fm"" % (stand, dist))
+</code></pre>
+","257645","","257645","","2018-12-10 04:55:16","2018-12-10 04:55:16","","","","2","","","","CC BY-SA 4.0"
+"47775357","2","","1401712","2017-12-12 14:46:25","","122","","<p>For anyone interested in computing multiple distances at once, I've done a little comparison using <a href=""https://github.com/nschloe/perfplot"" rel=""noreferrer"">perfplot</a> (a small project of mine). </p>
+
+<p>The first advice is to organize your data such that the arrays have dimension <code>(3, n)</code> (and are C-contiguous obviously). If adding happens in the contiguous first dimension, things are faster, and it doesn't matter too much if you use <code>sqrt-sum</code> with <code>axis=0</code>, <code>linalg.norm</code> with <code>axis=0</code>, or</p>
+
+<pre class=""lang-py prettyprint-override""><code>a_min_b = a - b
+numpy.sqrt(numpy.einsum('ij,ij-&gt;j', a_min_b, a_min_b))
+</code></pre>
+
+<p>which is, by a slight margin, the fastest variant. (That actually holds true for just one row as well.)</p>
+
+<p>The variants where you sum up over the second axis, <code>axis=1</code>, are all substantially slower.</p>
+
+<p><a href=""https://i.stack.imgur.com/uhdZV.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/uhdZV.png"" alt=""enter image description here""></a></p>
+
+<hr>
+
+<p>Code to reproduce the plot:</p>
+
+<pre class=""lang-py prettyprint-override""><code>import numpy
+import perfplot
+from scipy.spatial import distance
+
+
+def linalg_norm(data):
+    a, b = data[0]
+    return numpy.linalg.norm(a - b, axis=1)
+
+
+def linalg_norm_T(data):
+    a, b = data[1]
+    return numpy.linalg.norm(a - b, axis=0)
+
+
+def sqrt_sum(data):
+    a, b = data[0]
+    return numpy.sqrt(numpy.sum((a - b) ** 2, axis=1))
+
+
+def sqrt_sum_T(data):
+    a, b = data[1]
+    return numpy.sqrt(numpy.sum((a - b) ** 2, axis=0))
+
+
+def scipy_distance(data):
+    a, b = data[0]
+    return list(map(distance.euclidean, a, b))
+
+
+def sqrt_einsum(data):
+    a, b = data[0]
+    a_min_b = a - b
+    return numpy.sqrt(numpy.einsum(""ij,ij-&gt;i"", a_min_b, a_min_b))
+
+
+def sqrt_einsum_T(data):
+    a, b = data[1]
+    a_min_b = a - b
+    return numpy.sqrt(numpy.einsum(""ij,ij-&gt;j"", a_min_b, a_min_b))
+
+
+def setup(n):
+    a = numpy.random.rand(n, 3)
+    b = numpy.random.rand(n, 3)
+    out0 = numpy.array([a, b])
+    out1 = numpy.array([a.T, b.T])
+    return out0, out1
+
+
+perfplot.save(
+    ""norm.png"",
+    setup=setup,
+    n_range=[2 ** k for k in range(22)],
+    kernels=[
+        linalg_norm,
+        linalg_norm_T,
+        scipy_distance,
+        sqrt_sum,
+        sqrt_sum_T,
+        sqrt_einsum,
+        sqrt_einsum_T,
+    ],
+    logx=True,
+    logy=True,
+    xlabel=""len(x), len(y)"",
+)
+</code></pre>
+","353337","","353337","","2020-04-29 12:46:34","2020-04-29 12:46:34","","","","4","","","","CC BY-SA 4.0"
+"54196764","2","","1401712","2019-01-15 10:13:47","","14","","<p>Starting <code>Python 3.8</code>, the <a href=""https://docs.python.org/dev/library/math.html"" rel=""noreferrer""><code>math</code></a> module directly provides the <a href=""https://docs.python.org/dev/library/math.html#math.dist"" rel=""noreferrer""><code>dist</code></a> function, which returns the euclidean distance between two points (given as tuples or lists of coordinates):</p>
+
+<pre><code>from math import dist
+
+dist((1, 2, 6), (-2, 3, 2)) # 5.0990195135927845
+</code></pre>
+
+<p>And if you're working with lists:</p>
+
+<pre><code>dist([1, 2, 6], [-2, 3, 2]) # 5.0990195135927845
+</code></pre>
+","9297144","","9297144","","2019-07-28 05:11:16","2019-07-28 05:11:16","","","","0","","","","CC BY-SA 4.0"
+"1987705","2","","1987694","2010-01-01 02:02:41","","40","","<p>This sounds like you're using numpy.</p>
+
+<p>If that's the case, you can add:</p>
+
+<pre><code>import numpy as np
+np.set_printoptions(threshold=np.nan)
+</code></pre>
+
+<p>That will disable the corner printing.  For more information, see this <a href=""http://www.scipy.org/Tentative_NumPy_Tutorial#head-a476da892560e3bf994ec9b363e169b6467cd5a4"" rel=""noreferrer"">NumPy Tutorial</a>.</p>
+","65358","","102441","","2018-11-09 03:53:14","2018-11-09 03:53:14","","","","2","","","","CC BY-SA 4.0"
+"1988024","2","","1987694","2010-01-01 06:26:05","","694","","<p>Use <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.set_printoptions.html"" rel=""noreferrer""><code>numpy.set_printoptions</code></a>:</p>
+
+<pre><code>import sys
+import numpy
+numpy.set_printoptions(threshold=sys.maxsize)
+</code></pre>
+","1422778","","893113","","2019-03-21 21:15:49","2019-03-21 21:15:49","","","","6","","","2019-10-30 03:08:10","CC BY-SA 4.0"
+"24542498","2","","1987694","2014-07-02 23:08:50","","41","","<p>Here is a one-off way to do this, which is useful if you don't want to change your default settings:</p>
+
+<pre><code>def fullprint(*args, **kwargs):
+  from pprint import pprint
+  import numpy
+  opt = numpy.get_printoptions()
+  numpy.set_printoptions(threshold=numpy.inf)
+  pprint(*args, **kwargs)
+  numpy.set_printoptions(**opt)
+</code></pre>
+","3362652","","2641825","","2020-03-01 10:38:14","2020-03-01 10:38:14","","","","1","","","","CC BY-SA 4.0"
+"26018905","2","","1987694","2014-09-24 14:01:51","","239","","<pre><code>import numpy as np
+np.set_printoptions(threshold=np.inf)
+</code></pre>
+
+<p>I suggest using <code>np.inf</code> instead of <code>np.nan</code> which is suggested by others. They both work for your purpose, but by setting the threshold to ""infinity"" it is obvious to everybody reading your code what you mean. Having a threshold of ""not a number"" seems a little vague to me.</p>
+","3956460","","","","","2014-09-24 14:01:51","","","","5","","","","CC BY-SA 3.0"
+"29825258","2","","1987694","2015-04-23 13:40:50","","107","","<p>The previous answers are the correct ones, but as a weaker alternative you can transform into a list:</p>
+
+<pre><code>&gt;&gt;&gt; numpy.arange(100).reshape(25,4).tolist()
+
+[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15], [16, 17, 18, 19], [20, 21,
+22, 23], [24, 25, 26, 27], [28, 29, 30, 31], [32, 33, 34, 35], [36, 37, 38, 39], [40, 41,
+42, 43], [44, 45, 46, 47], [48, 49, 50, 51], [52, 53, 54, 55], [56, 57, 58, 59], [60, 61,
+62, 63], [64, 65, 66, 67], [68, 69, 70, 71], [72, 73, 74, 75], [76, 77, 78, 79], [80, 81,
+82, 83], [84, 85, 86, 87], [88, 89, 90, 91], [92, 93, 94, 95], [96, 97, 98, 99]]
+</code></pre>
+","1128223","","102441","","2018-04-02 23:46:40","2018-04-02 23:46:40","","","","3","","","","CC BY-SA 3.0"
+"39405221","2","","1987694","2016-09-09 06:33:55","","33","","<p>Using a context manager as <a href=""https://stackoverflow.com/a/24542498/5584077"">Paul Price</a> sugggested</p>
+
+<pre><code>import numpy as np
+
+
+class fullprint:
+    'context manager for printing full numpy arrays'
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault('threshold', np.inf)
+        self.opt = kwargs
+
+    def __enter__(self):
+        self._opt = np.get_printoptions()
+        np.set_printoptions(**self.opt)
+
+    def __exit__(self, type, value, traceback):
+        np.set_printoptions(**self._opt)
+
+
+if __name__ == '__main__': 
+    a = np.arange(1001)
+
+    with fullprint():
+        print(a)
+
+    print(a)
+
+    with fullprint(threshold=None, edgeitems=10):
+        print(a)
+</code></pre>
+","5584077","","5584077","","2020-02-17 13:42:18","2020-02-17 13:42:18","","","","1","","","","CC BY-SA 4.0"
+"42046812","2","","1987694","2017-02-04 23:22:48","","13","","<p><strong><code>numpy.savetxt</code></strong></p>
+
+<pre><code>numpy.savetxt(sys.stdout, numpy.arange(10000))
+</code></pre>
+
+<p>or if you need a string:</p>
+
+<pre><code>import StringIO
+sio = StringIO.StringIO()
+numpy.savetxt(sio, numpy.arange(10000))
+s = sio.getvalue()
+print s
+</code></pre>
+
+<p>The default output format is:</p>
+
+<pre><code>0.000000000000000000e+00
+1.000000000000000000e+00
+2.000000000000000000e+00
+3.000000000000000000e+00
+...
+</code></pre>
+
+<p>and it can be configured with further arguments.</p>
+
+<p>Note in particular how this also not shows the square brackets, and allows for a lot of customization, as mentioned at: <a href=""https://stackoverflow.com/questions/9360103/how-to-print-a-numpy-array-without-brackets/42046765#42046765"">How to print a Numpy array without brackets?</a></p>
+
+<p>Tested on Python 2.7.12, numpy 1.11.1.</p>
+","895245","","895245","","2019-05-02 07:01:42","2019-05-02 07:01:42","","","","2","","","","CC BY-SA 4.0"
+"45831462","2","","1987694","2017-08-23 05:43:13","","11","","<p>This is a slight modification (removed the option to pass additional arguments to <code>set_printoptions)</code>of <a href=""https://stackoverflow.com/a/39405221/5393381"">neok</a>s answer. </p>
+
+<p>It shows how you can use <a href=""https://docs.python.org/library/contextlib.html#contextlib.contextmanager"" rel=""noreferrer""><code>contextlib.contextmanager</code></a> to easily create such a contextmanager with fewer lines of code:</p>
+
+<pre><code>import numpy as np
+from contextlib import contextmanager
+
+@contextmanager
+def show_complete_array():
+    oldoptions = np.get_printoptions()
+    np.set_printoptions(threshold=np.inf)
+    try:
+        yield
+    finally:
+        np.set_printoptions(**oldoptions)
+</code></pre>
+
+<p>In your code it can be used like this:</p>
+
+<pre><code>a = np.arange(1001)
+
+print(a)      # shows the truncated array
+
+with show_complete_array():
+    print(a)  # shows the complete array
+
+print(a)      # shows the truncated array (again)
+</code></pre>
+","5393381","","5393381","","2018-04-03 06:16:04","2018-04-03 06:16:04","","","","3","","","","CC BY-SA 3.0"
+"52549657","2","","1987694","2018-09-28 06:34:48","","6","","<p>Complementary to this <a href=""https://stackoverflow.com/a/1988024/8553789"">answer</a> from the maximum number of columns (fixed with <code>numpy.set_printoptions(threshold=numpy.nan)</code>), there is also a limit of characters to be displayed. In some environments like when calling python from bash (rather than the interactive session), this can be fixed by setting the parameter <code>linewidth</code> as following.</p>
+
+<pre><code>import numpy as np
+np.set_printoptions(linewidth=2000)    # default = 75
+Mat = np.arange(20000,20150).reshape(2,75)    # 150 elements (75 columns)
+print(Mat)
+</code></pre>
+
+<p>In this case, your window should limit the number of characters to wrap the line.</p>
+
+<p>For those out there using sublime text and wanting to see results within the output window, you should add the build option <code>""word_wrap"": false</code> to the sublime-build file [<a href=""https://forum.sublimetext.com/t/sublime-text-3-how-to-disable-word-wrap-in-build-output/9907/2"" rel=""noreferrer"">source</a>] .</p>
+","8553789","","","","","2018-09-28 06:34:48","","","","0","","","","CC BY-SA 4.0"
+"53451484","2","","1987694","2018-11-23 18:30:16","","76","","<h2>Temporary setting</h2>
+<p>If you use NumPy 1.15 (released 2018-07-23) or newer, you can use the <code>printoptions</code> context manager:</p>
+<pre><code>with numpy.printoptions(threshold=numpy.inf):
+    print(arr)
+</code></pre>
+<p>(of course, replace <code>numpy</code> by <code>np</code> if that's how you imported <code>numpy</code>)</p>
+<p>The use of a context manager (the <code>with</code>-block) ensures that after the context manager is finished, the print options will revert to whatever they were before the block started.  It ensures the setting is temporary, and only applied to code within the block.</p>
+<p>See <a href=""https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.printoptions.html"" rel=""noreferrer""><code>numpy.printoptions</code> documentation</a> for details on the context manager and what other arguments it supports.</p>
+","974555","","974555","","2020-10-15 16:08:41","2020-10-15 16:08:41","","","","0","","","","CC BY-SA 4.0"
+"3519314","2","","3518778","2010-08-19 06:34:54","","699","","<p>You can use Numpy's <code>genfromtxt()</code> method to do so, by setting the <code>delimiter</code> kwarg to a comma.</p>
+
+<pre><code>from numpy import genfromtxt
+my_data = genfromtxt('my_file.csv', delimiter=',')
+</code></pre>
+
+<p>More information on the function can be found at its respective <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html"" rel=""noreferrer"">documentation</a>.</p>
+","362809","","192839","","2012-03-02 15:05:49","2012-03-02 15:05:49","","","","7","","","","CC BY-SA 3.0"
+"4724179","2","","3518778","2011-01-18 12:44:35","","67","","<p>You can also try <a href=""https://numpy.org/doc/stable/reference/generated/numpy.genfromtxt.html#numpy.genfromtxt"" rel=""nofollow noreferrer""><code>recfromcsv()</code></a> which can guess data types and return a properly formatted record array.</p>
+","74342","","3427178","","2020-10-26 08:49:15","2020-10-26 08:49:15","","","","1","","","","CC BY-SA 4.0"
+"26296194","2","","3518778","2014-10-10 09:30:25","","195","","<p>I would recommend the <a href=""http://pandas.pydata.org/pandas-docs/stable/generated/pandas.io.parsers.read_csv.html"" rel=""noreferrer""><code>read_csv</code></a> function from the <code>pandas</code> library:</p>
+
+<pre><code>import pandas as pd
+df=pd.read_csv('myfile.csv', sep=',',header=None)
+df.values
+array([[ 1. ,  2. ,  3. ],
+       [ 4. ,  5.5,  6. ]])
+</code></pre>
+
+<p>This gives a pandas <a href=""http://pandas.pydata.org/pandas-docs/dev/dsintro.html#dataframe"" rel=""noreferrer"">DataFrame</a> - allowing <a href=""https://stackoverflow.com/a/11077215/1461850"">many useful data manipulation functions which are not directly available with numpy record arrays</a>.</p>
+
+<blockquote>
+  <p>DataFrame is a 2-dimensional labeled data structure with columns of
+  potentially different types. You can think of it like a spreadsheet or
+  SQL table...</p>
+</blockquote>
+
+<hr>
+
+<p>I would also recommend <code>genfromtxt</code>. However, since the question asks for a <a href=""http://docs.scipy.org/doc/numpy/user/basics.rec.html"" rel=""noreferrer"">record array</a>, as opposed to a normal array, the <code>dtype=None</code> parameter needs to be added to the <code>genfromtxt</code> call:</p>
+
+<p>Given an input file, <code>myfile.csv</code>:</p>
+
+<pre><code>1.0, 2, 3
+4, 5.5, 6
+
+import numpy as np
+np.genfromtxt('myfile.csv',delimiter=',')
+</code></pre>
+
+<p>gives an array:</p>
+
+<pre><code>array([[ 1. ,  2. ,  3. ],
+       [ 4. ,  5.5,  6. ]])
+</code></pre>
+
+<p>and </p>
+
+<pre><code>np.genfromtxt('myfile.csv',delimiter=',',dtype=None)
+</code></pre>
+
+<p>gives a record array:</p>
+
+<pre><code>array([(1.0, 2.0, 3), (4.0, 5.5, 6)], 
+      dtype=[('f0', '&lt;f8'), ('f1', '&lt;f8'), ('f2', '&lt;i4')])
+</code></pre>
+
+<p>This has the advantage that file with <a href=""https://stackoverflow.com/a/15481761"">multiple data types (including strings) can be easily imported</a>.</p>
+","1461850","","-1","","2017-05-23 12:10:48","2014-10-10 09:59:13","","","","3","","","","CC BY-SA 3.0"
+"28554340","2","","3518778","2015-02-17 03:52:37","","80","","<p>I timed the</p>
+
+<pre><code>from numpy import genfromtxt
+genfromtxt(fname = dest_file, dtype = (&lt;whatever options&gt;))
+</code></pre>
+
+<p>versus</p>
+
+<pre><code>import csv
+import numpy as np
+with open(dest_file,'r') as dest_f:
+    data_iter = csv.reader(dest_f,
+                           delimiter = delimiter,
+                           quotechar = '""')
+    data = [data for data in data_iter]
+data_array = np.asarray(data, dtype = &lt;whatever options&gt;)
+</code></pre>
+
+<p>on 4.6 million rows with about 70 columns and found that the NumPy path took 2 min 16 secs and the csv-list comprehension method took 13 seconds.</p>
+
+<p>I would recommend the csv-list comprehension method as it is most likely relies on pre-compiled libraries and not the interpreter as much as NumPy. I suspect the pandas method would have similar interpreter overhead.</p>
+","3867231","","63550","","2018-07-15 08:26:48","2018-07-15 08:26:48","","","","2","","","","CC BY-SA 4.0"
+"44669986","2","","3518778","2017-06-21 07:52:48","","7","","<p>You can use this code to send CSV file data into an array:</p>
+
+<pre><code>import numpy as np
+csv = np.genfromtxt('test.csv', delimiter="","")
+print(csv)
+</code></pre>
+","5983136","","63550","","2018-07-15 08:27:15","2018-07-15 08:27:15","","","","0","","","","CC BY-SA 4.0"
+"46727805","2","","3518778","2017-10-13 10:28:24","","17","","<p>As I tried both ways using NumPy and Pandas, using pandas has a lot of advantages:</p>
+
+<ul>
+<li>Faster</li>
+<li>Less CPU usage</li>
+<li>1/3 RAM usage compared to NumPy genfromtxt</li>
+</ul>
+
+<p>This is my test code:</p>
+
+<pre><code>$ for f in test_pandas.py test_numpy_csv.py ; do  /usr/bin/time python $f; done
+2.94user 0.41system 0:03.05elapsed 109%CPU (0avgtext+0avgdata 502068maxresident)k
+0inputs+24outputs (0major+107147minor)pagefaults 0swaps
+
+23.29user 0.72system 0:23.72elapsed 101%CPU (0avgtext+0avgdata 1680888maxresident)k
+0inputs+0outputs (0major+416145minor)pagefaults 0swaps
+</code></pre>
+
+<h3>test_numpy_csv.py</h3>
+
+<pre><code>from numpy import genfromtxt
+train = genfromtxt('/home/hvn/me/notebook/train.csv', delimiter=',')
+</code></pre>
+
+<h3>test_pandas.py</h3>
+
+<pre><code>from pandas import read_csv
+df = read_csv('/home/hvn/me/notebook/train.csv')
+</code></pre>
+
+<h3>Data file:</h3>
+
+<pre><code>du -h ~/me/notebook/train.csv
+ 59M    /home/hvn/me/notebook/train.csv
+</code></pre>
+
+<p>With NumPy and pandas at versions:</p>
+
+<pre><code>$ pip freeze | egrep -i 'pandas|numpy'
+numpy==1.13.3
+pandas==0.20.2
+</code></pre>
+","807703","","63550","","2018-07-15 08:29:04","2018-07-15 08:29:04","","","","0","","","","CC BY-SA 4.0"
+"4455154","2","","4455076","2010-12-15 21:35:43","","752","","<pre><code>&gt;&gt;&gt; test[:,0]
+array([1, 3, 5])
+</code></pre>
+
+<p>Similarly, </p>
+
+<pre><code>&gt;&gt;&gt; test[1,:]
+array([3, 4])
+</code></pre>
+
+<p>lets you access rows.  This is covered in Section 1.4 (Indexing) of the <a href=""http://docs.scipy.org/doc/numpy/reference/arrays.indexing.html"" rel=""noreferrer"">NumPy reference</a>.  This is quick, at least in my experience.  It's certainly much quicker than accessing each element in a loop.</p>
+","120261","","714305","","2016-01-20 09:06:10","2016-01-20 09:06:10","","","","2","","","","CC BY-SA 3.0"
+"16121210","2","","4455076","2013-04-20 14:05:21","","75","","<p>And if you want to access more than one column at a time you could do:</p>
+
+<pre><code>&gt;&gt;&gt; test = np.arange(9).reshape((3,3))
+&gt;&gt;&gt; test
+array([[0, 1, 2],
+       [3, 4, 5],
+       [6, 7, 8]])
+&gt;&gt;&gt; test[:,[0,2]]
+array([[0, 2],
+       [3, 5],
+       [6, 8]])
+</code></pre>
+","1078084","","","","","2013-04-20 14:05:21","","","","5","","","","CC BY-SA 3.0"
+"22990906","2","","4455076","2014-04-10 14:25:12","","74","","<pre><code>&gt;&gt;&gt; test[:,0]
+array([1, 3, 5])
+</code></pre>
+
+<p>this command gives you a row vector, if you just want to loop over it, it's fine, but if you want to hstack with some other array with dimension 3xN, you will have</p>
+
+<blockquote>
+<pre><code>ValueError: all the input arrays must have same number of dimensions
+</code></pre>
+</blockquote>
+
+<p>while</p>
+
+<pre><code>&gt;&gt;&gt; test[:,[0]]
+array([[1],
+       [3],
+       [5]])
+</code></pre>
+
+<p>gives you a column vector, so that you can do concatenate or hstack operation.</p>
+
+<p>e.g.</p>
+
+<pre><code>&gt;&gt;&gt; np.hstack((test, test[:,[0]]))
+array([[1, 2, 1],
+       [3, 4, 3],
+       [5, 6, 5]])
+</code></pre>
+","2091555","","4298200","","2019-11-03 15:05:47","2019-11-03 15:05:47","","","","3","","","","CC BY-SA 4.0"
+"35011051","2","","4455076","2016-01-26 09:55:40","","23","","<p>You could also transpose and return a row:</p>
+
+<pre><code>In [4]: test.T[0]
+Out[4]: array([1, 3, 5])
+</code></pre>
+","1057593","","","","","2016-01-26 09:55:40","","","","1","","","","CC BY-SA 3.0"
+"49149947","2","","4455076","2018-03-07 10:43:58","","6","","<p>To get several and indepent columns, just:</p>
+
+<pre><code>&gt; test[:,[0,2]]
+</code></pre>
+
+<p>you will get colums 0 and 2 </p>
+","2752595","","","","","2018-03-07 10:43:58","","","","1","","","","CC BY-SA 3.0"
+"52978954","2","","4455076","2018-10-24 22:49:02","","10","","<p>Although the question has been answered, let me mention some nuances.</p>
+<p>Let's say you are interested in the first column of the array</p>
+<pre><code>arr = numpy.array([[1, 2],
+                   [3, 4],
+                   [5, 6]])
+</code></pre>
+<p>As you already know from other answers, to get it in the form of &quot;row vector&quot; (array of shape <code>(3,)</code>), you use slicing:</p>
+<pre><code>arr_col1_view = arr[:, 1]         # creates a view of the 1st column of the arr
+arr_col1_copy = arr[:, 1].copy()  # creates a copy of the 1st column of the arr
+</code></pre>
+<p>To check if an array is a view or a copy of another array you can do the following:</p>
+<pre><code>arr_col1_view.base is arr  # True
+arr_col1_copy.base is arr  # False
+</code></pre>
+<p>see <a href=""https://docs.scipy.org/doc/numpy-1.15.1/reference/generated/numpy.ndarray.base.html"" rel=""nofollow noreferrer"">ndarray.base</a>.</p>
+<p>Besides the obvious difference between the two (modifying <code>arr_col1_view</code> will affect the <code>arr</code>), the number of byte-steps for traversing each of them is different:</p>
+<pre><code>arr_col1_view.strides[0]  # 8 bytes
+arr_col1_copy.strides[0]  # 4 bytes
+</code></pre>
+<p>see <a href=""https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.ndarray.strides.html"" rel=""nofollow noreferrer"">strides</a> and this <a href=""https://stackoverflow.com/questions/53097952/how-to-understand-numpy-strides-for-layman/53099870#53099870"">answer</a>.</p>
+<p>Why is this important? Imagine that you have a very big array <code>A</code> instead of the <code>arr</code>:</p>
+<pre><code>A = np.random.randint(2, size=(10000, 10000), dtype='int32')
+A_col1_view = A[:, 1] 
+A_col1_copy = A[:, 1].copy()
+</code></pre>
+<p>and you want to compute the sum of all the elements of the first column, i.e. <code>A_col1_view.sum()</code> or <code>A_col1_copy.sum()</code>. Using the copied version is much faster:</p>
+<pre><code>%timeit A_col1_view.sum()  # ~248 µs
+%timeit A_col1_copy.sum()  # ~12.8 µs
+</code></pre>
+<p>This is due to the different number of strides mentioned before:</p>
+<pre><code>A_col1_view.strides[0]  # 40000 bytes
+A_col1_copy.strides[0]  # 4 bytes
+</code></pre>
+<p>Although it might seem that using column copies is better, it is not always true for the reason that making a copy takes time too and uses more memory (in this case it took me approx. 200 µs to create the <code>A_col1_copy</code>). However if we needed the copy in the first place, or we need to do many different operations on a specific column of the array and we are ok with sacrificing memory for speed, then making a copy is the way to go.</p>
+<p>In the case we are interested in working mostly with columns, it could be a good idea to create our array in column-major ('F') order instead of the row-major ('C') order (which is the default), and then do the slicing as before to get a column without copying it:</p>
+<pre><code>A = np.asfortranarray(A)   # or np.array(A, order='F')
+A_col1_view = A[:, 1]
+A_col1_view.strides[0]     # 4 bytes
+
+%timeit A_col1_view.sum()  # ~12.6 µs vs ~248 µs
+</code></pre>
+<p>Now, performing the sum operation (or any other) on a column-view is as fast as performing it on a column copy.</p>
+<p>Finally let me note that transposing an array and using row-slicing is the same as using the column-slicing on the original array, because transposing is done by just swapping the shape and the strides of the original array.</p>
+<pre><code>A[:, 1].strides[0]    # 40000 bytes
+A.T[1, :].strides[0]  # 40000 bytes
+</code></pre>
+","2945357","","2945357","","2020-11-23 20:13:58","2020-11-23 20:13:58","","","","0","","","","CC BY-SA 4.0"
+"6081043","2","","6081008","2011-05-21 10:10:15","","941","","<p><a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.savetxt.html"" rel=""noreferrer""><code>numpy.savetxt</code></a> saves an array to a text file.</p>
+
+<pre><code>import numpy
+a = numpy.asarray([ [1,2,3], [4,5,6], [7,8,9] ])
+numpy.savetxt(""foo.csv"", a, delimiter="","")
+</code></pre>
+","407438","","4909087","","2017-08-26 05:39:44","2017-08-26 05:39:44","","","","12","","","","CC BY-SA 3.0"
+"30189734","2","","6081008","2015-05-12 11:37:44","","48","","<p><a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.tofile.html"" rel=""noreferrer""><code>tofile</code></a> is a convenient function to do this:</p>
+
+<pre><code>import numpy as np
+a = np.asarray([ [1,2,3], [4,5,6], [7,8,9] ])
+a.tofile('foo.csv',sep=',',format='%10.5f')
+</code></pre>
+
+<p>The man page has some useful notes:</p>
+
+<blockquote>
+  <p>This is a convenience function for quick storage of array data.
+  Information on endianness and precision is lost, so this method is not
+  a good choice for files intended to archive data or transport data
+  between machines with different endianness. Some of these problems can
+  be overcome by outputting the data as text files, at the expense of
+  speed and file size.</p>
+</blockquote>
+
+<p>Note. This function does not produce multi-line csv files, it saves everything to one line.</p>
+","1461850","","3995261","","2018-01-07 17:57:45","2018-01-07 17:57:45","","","","4","","","","CC BY-SA 3.0"
+"41009026","2","","6081008","2016-12-07 03:42:10","","17","","<p>Writing record arrays as CSV files with headers requires a bit more work.</p>
+<p>This example reads from a CSV file (<code>'example.csv'</code>) and writes its contents to another CSV file (<code>out.csv</code>).</p>
+<pre><code>import numpy as np
+
+# Write an example CSV file with headers on first line
+with open('example.csv', 'w') as fp:
+    fp.write('''\
+col1,col2,col3
+1,100.1,string1
+2,222.2,second string
+''')
+
+# Read it as a Numpy record array
+ar = np.recfromcsv('example.csv')
+print(repr(ar))
+# rec.array([(1, 100.1, 'string1'), (2, 222.2, 'second string')], 
+#           dtype=[('col1', '&lt;i4'), ('col2', '&lt;f8'), ('col3', 'S13')])
+
+# Write as a CSV file with headers on first line
+with open('out.csv', 'w') as fp:
+    fp.write(','.join(ar.dtype.names) + '\n')
+    np.savetxt(fp, ar, '%s', ',')
+</code></pre>
+<p>Note that the above example cannot handle values which are strings with commas. To always enclose non-numeric values within quotes, use the <a href=""https://docs.python.org/2/library/csv.html"" rel=""nofollow noreferrer""><code>csv</code></a> package:</p>
+<pre><code>import csv
+
+with open('out2.csv', 'wb') as fp:
+    writer = csv.writer(fp, quoting=csv.QUOTE_NONNUMERIC)
+    writer.writerow(ar.dtype.names)
+    writer.writerows(ar.tolist())
+</code></pre>
+","327026","","1047213","","2020-11-21 14:55:38","2020-11-21 14:55:38","","","","1","","","","CC BY-SA 4.0"
+"41096943","2","","6081008","2016-12-12 08:38:49","","158","","<p>You can use <code>pandas</code>. It does take some extra memory so it's not always possible, but it's very fast and easy to use.</p>
+
+<pre><code>import pandas as pd 
+pd.DataFrame(np_array).to_csv(""path/to/file.csv"")
+</code></pre>
+
+<p>if you don't want a header or index, use <code>to_csv(""/path/to/file.csv"", header=None, index=None)</code></p>
+","3218806","","3218806","","2019-02-04 15:38:46","2019-02-04 15:38:46","","","","9","","","","CC BY-SA 4.0"
+"53001069","2","","6081008","2018-10-26 03:40:25","","12","","<p>As already discussed, the best way to dump the array into a CSV file is by using <code>.savetxt(...)</code>method. However, there are certain things we should know to do it properly. </p>
+
+<p>For example, if you have a numpy array with <code>dtype = np.int32</code> as</p>
+
+<pre><code>   narr = np.array([[1,2],
+                 [3,4],
+                 [5,6]], dtype=np.int32)
+</code></pre>
+
+<p>and want to save using <code>savetxt</code> as</p>
+
+<pre><code>np.savetxt('values.csv', narr, delimiter="","")
+</code></pre>
+
+<p>It will store the data in floating point exponential format as</p>
+
+<pre><code>1.000000000000000000e+00,2.000000000000000000e+00
+3.000000000000000000e+00,4.000000000000000000e+00
+5.000000000000000000e+00,6.000000000000000000e+00
+</code></pre>
+
+<p>You will have to change the formatting by using a parameter called <code>fmt</code> as</p>
+
+<pre><code>np.savetxt('values.csv', narr, fmt=""%d"", delimiter="","")
+</code></pre>
+
+<p>to store data in its original format</p>
+
+<h2>Saving Data in Compressed gz format</h2>
+
+<p>Also, <code>savetxt</code> can be used for storing data in <code>.gz</code> compressed format which might be useful while transferring data over network. </p>
+
+<p>We just need to change the extension of the file as <code>.gz</code> and numpy will take care of everything automatically</p>
+
+<pre><code>np.savetxt('values.gz', narr, fmt=""%d"", delimiter="","")
+</code></pre>
+
+<p>Hope it helps</p>
+","5662469","","","","","2018-10-26 03:40:25","","","","1","","","","CC BY-SA 4.0"
+"54637996","2","","6081008","2019-02-11 19:48:26","","6","","<p>I believe you can also accomplish this quite simply as follows:</p>
+
+<ol>
+<li>Convert Numpy array into a Pandas dataframe</li>
+<li>Save as CSV</li>
+</ol>
+
+<p>e.g. #1:</p>
+
+<pre><code>    # Libraries to import
+    import pandas as pd
+    import nump as np
+
+    #N x N numpy array (dimensions dont matter)
+    corr_mat    #your numpy array
+    my_df = pd.DataFrame(corr_mat)  #converting it to a pandas dataframe
+</code></pre>
+
+<p>e.g. #2:</p>
+
+<pre><code>    #save as csv 
+    my_df.to_csv('foo.csv', index=False)   # ""foo"" is the name you want to give
+                                           # to csv file. Make sure to add "".csv""
+                                           # after whatever name like in the code
+</code></pre>
+","9101974","","","user1531971","2019-02-11 21:27:54","2019-02-11 21:27:54","","","","0","","","","CC BY-SA 4.0"
+"6910672","2","","6910641","2011-08-02 10:32:53","","388","","<p>The simplest I've been able to come up with is:</p>
+
+<pre><code>In [1]: import numpy as np
+
+In [2]: arr = np.array([1, 3, 2, 4, 5])
+
+In [3]: arr.argsort()[-3:][::-1]
+Out[3]: array([4, 3, 1])
+</code></pre>
+
+<p>This involves a complete sort of the array. I wonder if <code>numpy</code> provides a built-in way to do a partial sort; so far I haven't been able to find one.</p>
+
+<p>If this solution turns out to be too slow (especially for small <code>n</code>), it may be worth looking at coding something up in <a href=""http://cython.org/"">Cython</a>.</p>
+","367273","","367273","","2011-08-02 10:45:41","2011-08-02 10:45:41","","","","9","","","","CC BY-SA 3.0"
+"18691983","2","","6910641","2013-09-09 05:30:32","","39","","<p>Use:</p>
+
+<pre><code>&gt;&gt;&gt; import heapq
+&gt;&gt;&gt; import numpy
+&gt;&gt;&gt; a = numpy.array([1, 3, 2, 4, 5])
+&gt;&gt;&gt; heapq.nlargest(3, range(len(a)), a.take)
+[4, 3, 1]
+</code></pre>
+
+<p>For regular Python lists:</p>
+
+<pre><code>&gt;&gt;&gt; a = [1, 3, 2, 4, 5]
+&gt;&gt;&gt; heapq.nlargest(3, range(len(a)), a.__getitem__)
+[4, 3, 1]
+</code></pre>
+
+<p>If you use Python 2, use <code>xrange</code> instead of <code>range</code>.</p>
+
+<p>Source: <em><a href=""http://docs.python.org/3/library/heapq.html"" rel=""noreferrer"">heapq — Heap queue algorithm</a></em></p>
+","513397","","63550","","2018-06-28 02:49:39","2018-06-28 02:49:39","","","","2","","","","CC BY-SA 4.0"
+"23734295","2","","6910641","2014-05-19 09:32:20","","656","","<p>Newer NumPy versions (1.8 and up) have a function called <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.argpartition.html"" rel=""noreferrer""><code>argpartition</code></a> for this. To get the indices of the four largest elements, do</p>
+
+<pre><code>&gt;&gt;&gt; a = np.array([9, 4, 4, 3, 3, 9, 0, 4, 6, 0])
+&gt;&gt;&gt; a
+array([9, 4, 4, 3, 3, 9, 0, 4, 6, 0])
+&gt;&gt;&gt; ind = np.argpartition(a, -4)[-4:]
+&gt;&gt;&gt; ind
+array([1, 5, 8, 0])
+&gt;&gt;&gt; a[ind]
+array([4, 9, 6, 9])
+</code></pre>
+
+<p>Unlike <code>argsort</code>, this function runs in linear time in the worst case, but the returned indices are not sorted, as can be seen from the result of evaluating <code>a[ind]</code>. If you need that too, sort them afterwards:</p>
+
+<pre><code>&gt;&gt;&gt; ind[np.argsort(a[ind])]
+array([1, 8, 5, 0])
+</code></pre>
+
+<p>To get the top-<em>k</em> elements in sorted order in this way takes O(<em>n</em> + <em>k</em> log <em>k</em>) time.</p>
+","166749","","1169814","","2018-08-16 17:14:16","2018-08-16 17:14:16","","","","11","","","2016-03-22 14:59:36","CC BY-SA 4.0"
+"27433395","2","","6910641","2014-12-11 22:13:05","","52","","<p>Simpler yet:</p>
+
+<pre><code>idx = (-arr).argsort()[:n]
+</code></pre>
+
+<p>where <em>n</em> is the number of maximum values.</p>
+","2595035","","","","","2014-12-11 22:13:05","","","","3","","","","CC BY-SA 3.0"
+"37211075","2","","6910641","2016-05-13 13:16:28","","10","","<p>If you don't care about the <em>order</em> of the K-th largest elements you can use <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.argpartition.html"" rel=""noreferrer""><code>argpartition</code></a>, which should perform better than a full sort through <code>argsort</code>.</p>
+
+<pre><code>K = 4 # We want the indices of the four largest values
+a = np.array([0, 8, 0, 4, 5, 8, 8, 0, 4, 2])
+np.argpartition(a,-K)[-K:]
+array([4, 1, 5, 6])
+</code></pre>
+
+<p>Credits go to <a href=""https://stackoverflow.com/questions/34226400/find-the-k-smallest-values-of-a-numpy-array"">this question</a>.</p>
+
+<p>I ran a few tests and it looks like <code>argpartition</code> outperforms <code>argsort</code> as the size of the array and the value of K increase.</p>
+","2195972","","63550","","2018-06-28 02:52:38","2018-06-28 02:52:38","","","","0","","","","CC BY-SA 4.0"
+"38884051","2","","6910641","2016-08-10 21:42:27","","35","","<p>If you happen to be working with a multidimensional array then you'll need to flatten and unravel the indices:</p>
+
+<pre><code>def largest_indices(ary, n):
+    """"""Returns the n largest indices from a numpy array.""""""
+    flat = ary.flatten()
+    indices = np.argpartition(flat, -n)[-n:]
+    indices = indices[np.argsort(-flat[indices])]
+    return np.unravel_index(indices, ary.shape)
+</code></pre>
+
+<p>For example:</p>
+
+<pre><code>&gt;&gt;&gt; xs = np.sin(np.arange(9)).reshape((3, 3))
+&gt;&gt;&gt; xs
+array([[ 0.        ,  0.84147098,  0.90929743],
+       [ 0.14112001, -0.7568025 , -0.95892427],
+       [-0.2794155 ,  0.6569866 ,  0.98935825]])
+&gt;&gt;&gt; largest_indices(xs, 3)
+(array([2, 0, 0]), array([2, 2, 1]))
+&gt;&gt;&gt; xs[largest_indices(xs, 3)]
+array([ 0.98935825,  0.90929743,  0.84147098])
+</code></pre>
+","388951","","","","","2016-08-10 21:42:27","","","","0","","","","CC BY-SA 3.0"
+"41087287","2","","6910641","2016-12-11 14:34:34","","9","","<p>For multidimensional arrays you can use the <code>axis</code> keyword in order to apply the partitioning along the expected axis.</p>
+
+<pre><code># For a 2D array
+indices = np.argpartition(arr, -N, axis=1)[:, -N:]
+</code></pre>
+
+<p>And for grabbing the items:</p>
+
+<pre><code>x = arr.shape[0]
+arr[np.repeat(np.arange(x), N), indices.ravel()].reshape(x, N)
+</code></pre>
+
+<p>But note that this won't return a sorted result. In that case you can use <code>np.argsort()</code> along the intended axis:</p>
+
+<pre><code>indices = np.argsort(arr, axis=1)[:, -N:]
+
+# Result
+x = arr.shape[0]
+arr[np.repeat(np.arange(x), N), indices.ravel()].reshape(x, N)
+</code></pre>
+
+<p>Here is an example:</p>
+
+<pre><code>In [42]: a = np.random.randint(0, 20, (10, 10))
+
+In [44]: a
+Out[44]:
+array([[ 7, 11, 12,  0,  2,  3,  4, 10,  6, 10],
+       [16, 16,  4,  3, 18,  5, 10,  4, 14,  9],
+       [ 2,  9, 15, 12, 18,  3, 13, 11,  5, 10],
+       [14,  0,  9, 11,  1,  4,  9, 19, 18, 12],
+       [ 0, 10,  5, 15,  9, 18,  5,  2, 16, 19],
+       [14, 19,  3, 11, 13, 11, 13, 11,  1, 14],
+       [ 7, 15, 18,  6,  5, 13,  1,  7,  9, 19],
+       [11, 17, 11, 16, 14,  3, 16,  1, 12, 19],
+       [ 2,  4, 14,  8,  6,  9, 14,  9,  1,  5],
+       [ 1, 10, 15,  0,  1,  9, 18,  2,  2, 12]])
+
+In [45]: np.argpartition(a, np.argmin(a, axis=0))[:, 1:] # 1 is because the first item is the minimum one.
+Out[45]:
+array([[4, 5, 6, 8, 0, 7, 9, 1, 2],
+       [2, 7, 5, 9, 6, 8, 1, 0, 4],
+       [5, 8, 1, 9, 7, 3, 6, 2, 4],
+       [4, 5, 2, 6, 3, 9, 0, 8, 7],
+       [7, 2, 6, 4, 1, 3, 8, 5, 9],
+       [2, 3, 5, 7, 6, 4, 0, 9, 1],
+       [4, 3, 0, 7, 8, 5, 1, 2, 9],
+       [5, 2, 0, 8, 4, 6, 3, 1, 9],
+       [0, 1, 9, 4, 3, 7, 5, 2, 6],
+       [0, 4, 7, 8, 5, 1, 9, 2, 6]])
+
+In [46]: np.argpartition(a, np.argmin(a, axis=0))[:, -3:]
+Out[46]:
+array([[9, 1, 2],
+       [1, 0, 4],
+       [6, 2, 4],
+       [0, 8, 7],
+       [8, 5, 9],
+       [0, 9, 1],
+       [1, 2, 9],
+       [3, 1, 9],
+       [5, 2, 6],
+       [9, 2, 6]])
+
+In [89]: a[np.repeat(np.arange(x), 3), ind.ravel()].reshape(x, 3)
+Out[89]:
+array([[10, 11, 12],
+       [16, 16, 18],
+       [13, 15, 18],
+       [14, 18, 19],
+       [16, 18, 19],
+       [14, 14, 19],
+       [15, 18, 19],
+       [16, 17, 19],
+       [ 9, 14, 14],
+       [12, 15, 18]])
+</code></pre>
+","2867928","","63550","","2018-06-28 02:53:53","2018-06-28 02:53:53","","","","1","","","","CC BY-SA 4.0"
+"13193256","2","","13187778","2012-11-02 10:16:00","","33","","<p>You can use the <code>to_records</code> method, but have to play around a bit with the dtypes if they are not what you want from the get go. In my case, having copied your DF from a string, the index type is string (represented by an <code>object</code> dtype in pandas):</p>
+
+<pre><code>In [102]: df
+Out[102]: 
+label    A    B    C
+ID                  
+1      NaN  0.2  NaN
+2      NaN  NaN  0.5
+3      NaN  0.2  0.5
+4      0.1  0.2  NaN
+5      0.1  0.2  0.5
+6      0.1  NaN  0.5
+7      0.1  NaN  NaN
+
+In [103]: df.index.dtype
+Out[103]: dtype('object')
+In [104]: df.to_records()
+Out[104]: 
+rec.array([(1, nan, 0.2, nan), (2, nan, nan, 0.5), (3, nan, 0.2, 0.5),
+       (4, 0.1, 0.2, nan), (5, 0.1, 0.2, 0.5), (6, 0.1, nan, 0.5),
+       (7, 0.1, nan, nan)], 
+      dtype=[('index', '|O8'), ('A', '&lt;f8'), ('B', '&lt;f8'), ('C', '&lt;f8')])
+In [106]: df.to_records().dtype
+Out[106]: dtype([('index', '|O8'), ('A', '&lt;f8'), ('B', '&lt;f8'), ('C', '&lt;f8')])
+</code></pre>
+
+<p>Converting the recarray dtype does not work for me, but one can do this in Pandas already:</p>
+
+<pre><code>In [109]: df.index = df.index.astype('i8')
+In [111]: df.to_records().view([('ID', '&lt;i8'), ('A', '&lt;f8'), ('B', '&lt;f8'), ('C', '&lt;f8')])
+Out[111]:
+rec.array([(1, nan, 0.2, nan), (2, nan, nan, 0.5), (3, nan, 0.2, 0.5),
+       (4, 0.1, 0.2, nan), (5, 0.1, 0.2, 0.5), (6, 0.1, nan, 0.5),
+       (7, 0.1, nan, nan)], 
+      dtype=[('ID', '&lt;i8'), ('A', '&lt;f8'), ('B', '&lt;f8'), ('C', '&lt;f8')])
+</code></pre>
+
+<p>Note that Pandas does not set the name of the index properly (to <code>ID</code>) in the exported record array (a bug?), so we profit from the type conversion to also correct for that. </p>
+
+<p>At the moment Pandas has only 8-byte integers, <code>i8</code>, and floats, <code>f8</code> (see this <a href=""https://github.com/pydata/pandas/issues/622"">issue</a>).</p>
+","54567","","","","","2012-11-02 10:16:00","","","","2","","","","CC BY-SA 3.0"
+"22653050","2","","13187778","2014-03-26 06:23:21","","71","","<p>I would just chain the <a href=""http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.reset_index.html"">DataFrame.reset_index()</a> and <a href=""http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.values.html"">DataFrame.values</a> functions to get the Numpy representation of the dataframe, including the index:</p>
+
+<pre><code>In [8]: df
+Out[8]: 
+          A         B         C
+0 -0.982726  0.150726  0.691625
+1  0.617297 -0.471879  0.505547
+2  0.417123 -1.356803 -1.013499
+3 -0.166363 -0.957758  1.178659
+4 -0.164103  0.074516 -0.674325
+5 -0.340169 -0.293698  1.231791
+6 -1.062825  0.556273  1.508058
+7  0.959610  0.247539  0.091333
+
+[8 rows x 3 columns]
+
+In [9]: df.reset_index().values
+Out[9]:
+array([[ 0.        , -0.98272574,  0.150726  ,  0.69162512],
+       [ 1.        ,  0.61729734, -0.47187926,  0.50554728],
+       [ 2.        ,  0.4171228 , -1.35680324, -1.01349922],
+       [ 3.        , -0.16636303, -0.95775849,  1.17865945],
+       [ 4.        , -0.16410334,  0.0745164 , -0.67432474],
+       [ 5.        , -0.34016865, -0.29369841,  1.23179064],
+       [ 6.        , -1.06282542,  0.55627285,  1.50805754],
+       [ 7.        ,  0.95961001,  0.24753911,  0.09133339]])
+</code></pre>
+
+<p>To get the dtypes we'd need to transform this ndarray into a structured array using <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.view.html"">view</a>:</p>
+
+<pre><code>In [10]: df.reset_index().values.ravel().view(dtype=[('index', int), ('A', float), ('B', float), ('C', float)])
+Out[10]:
+array([( 0, -0.98272574,  0.150726  ,  0.69162512),
+       ( 1,  0.61729734, -0.47187926,  0.50554728),
+       ( 2,  0.4171228 , -1.35680324, -1.01349922),
+       ( 3, -0.16636303, -0.95775849,  1.17865945),
+       ( 4, -0.16410334,  0.0745164 , -0.67432474),
+       ( 5, -0.34016865, -0.29369841,  1.23179064),
+       ( 6, -1.06282542,  0.55627285,  1.50805754),
+       ( 7,  0.95961001,  0.24753911,  0.09133339),
+       dtype=[('index', '&lt;i8'), ('A', '&lt;f8'), ('B', '&lt;f8'), ('C', '&lt;f8')])
+</code></pre>
+","1825593","","1825593","","2014-03-26 07:35:16","2014-03-26 07:35:16","","","","1","","","","CC BY-SA 3.0"
+"24793359","2","","13187778","2014-07-17 01:13:50","","130","","<p><strong><em>Note</strong>: The <code>.as_matrix()</code> method used in this answer is deprecated. Pandas 0.23.4 warns:</em></p>
+
+<blockquote>
+  <p>Method <code>.as_matrix</code> will be removed in a future version. Use .values instead.</p>
+</blockquote>
+
+<hr>
+
+<p>Pandas has something built in...</p>
+
+<pre><code>numpy_matrix = df.as_matrix()
+</code></pre>
+
+<p>gives</p>
+
+<pre><code>array([[nan, 0.2, nan],
+       [nan, nan, 0.5],
+       [nan, 0.2, 0.5],
+       [0.1, 0.2, nan],
+       [0.1, 0.2, 0.5],
+       [0.1, nan, 0.5],
+       [0.1, nan, nan]])
+</code></pre>
+","2600939","","119775","","2019-03-13 14:09:04","2019-03-13 14:09:04","","","","4","","","","CC BY-SA 4.0"
+"30772443","2","","13187778","2015-06-11 05:38:53","","9","","<p>Here is my approach to making a structure array from a pandas DataFrame.</p>
+
+<p>Create the data frame</p>
+
+<pre><code>import pandas as pd
+import numpy as np
+import six
+
+NaN = float('nan')
+ID = [1, 2, 3, 4, 5, 6, 7]
+A = [NaN, NaN, NaN, 0.1, 0.1, 0.1, 0.1]
+B = [0.2, NaN, 0.2, 0.2, 0.2, NaN, NaN]
+C = [NaN, 0.5, 0.5, NaN, 0.5, 0.5, NaN]
+columns = {'A':A, 'B':B, 'C':C}
+df = pd.DataFrame(columns, index=ID)
+df.index.name = 'ID'
+print(df)
+
+      A    B    C
+ID               
+1   NaN  0.2  NaN
+2   NaN  NaN  0.5
+3   NaN  0.2  0.5
+4   0.1  0.2  NaN
+5   0.1  0.2  0.5
+6   0.1  NaN  0.5
+7   0.1  NaN  NaN
+</code></pre>
+
+<p>Define function to make a numpy structure array (not a record array) from a pandas DataFrame.</p>
+
+<pre><code>def df_to_sarray(df):
+    """"""
+    Convert a pandas DataFrame object to a numpy structured array.
+    This is functionally equivalent to but more efficient than
+    np.array(df.to_array())
+
+    :param df: the data frame to convert
+    :return: a numpy structured array representation of df
+    """"""
+
+    v = df.values
+    cols = df.columns
+
+    if six.PY2:  # python 2 needs .encode() but 3 does not
+        types = [(cols[i].encode(), df[k].dtype.type) for (i, k) in enumerate(cols)]
+    else:
+        types = [(cols[i], df[k].dtype.type) for (i, k) in enumerate(cols)]
+    dtype = np.dtype(types)
+    z = np.zeros(v.shape[0], dtype)
+    for (i, k) in enumerate(z.dtype.names):
+        z[k] = v[:, i]
+    return z
+</code></pre>
+
+<p>Use <code>reset_index</code> to make a new data frame that includes the index as part of its data. Convert that data frame to a structure array.</p>
+
+<pre><code>sa = df_to_sarray(df.reset_index())
+sa
+
+array([(1L, nan, 0.2, nan), (2L, nan, nan, 0.5), (3L, nan, 0.2, 0.5),
+       (4L, 0.1, 0.2, nan), (5L, 0.1, 0.2, 0.5), (6L, 0.1, nan, 0.5),
+       (7L, 0.1, nan, nan)], 
+      dtype=[('ID', '&lt;i8'), ('A', '&lt;f8'), ('B', '&lt;f8'), ('C', '&lt;f8')])
+</code></pre>
+
+<p>EDIT: Updated df_to_sarray to avoid error calling .encode() with python 3. Thanks to <a href=""https://stackoverflow.com/users/50385/joseph-garvin"">Joseph Garvin</a> and <a href=""https://stackoverflow.com/users/8035165/halcyon"">halcyon</a>  for their comment and solution.</p>
+","3154588","","3154588","","2017-06-23 14:28:23","2017-06-23 14:28:23","","","","2","","","","CC BY-SA 3.0"
+"37043071","2","","13187778","2016-05-05 05:29:51","","418","","<p>To convert a pandas dataframe (df) to a numpy ndarray, use this code:</p>
+
+<pre><code>df.values
+
+array([[nan, 0.2, nan],
+       [nan, nan, 0.5],
+       [nan, 0.2, 0.5],
+       [0.1, 0.2, nan],
+       [0.1, 0.2, 0.5],
+       [0.1, nan, 0.5],
+       [0.1, nan, nan]])
+</code></pre>
+","4666038","","4909087","","2019-05-10 22:50:09","2019-05-10 22:50:09","","","","0","","","","CC BY-SA 4.0"
+"48020761","2","","13187778","2017-12-29 10:02:05","","6","","<p>Two ways to convert the data-frame to its Numpy-array representation.</p>
+
+<ul>
+<li><p><code>mah_np_array = df.as_matrix(columns=None)</code></p></li>
+<li><p><code>mah_np_array = df.values</code></p></li>
+</ul>
+
+<p>Doc: <a href=""https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.as_matrix.html"" rel=""noreferrer"">https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.as_matrix.html</a></p>
+","1549191","","","","","2017-12-29 10:02:05","","","","0","","","","CC BY-SA 3.0"
+"49980432","2","","13187778","2018-04-23 11:51:16","","27","","<p>It seems like <code>df.to_records()</code> will work for you. The exact feature you're looking for <a href=""https://github.com/pandas-dev/pandas/issues/16561"" rel=""noreferrer"">was requested</a> and <code>to_records</code> pointed to as an alternative.</p>
+
+<p>I tried this out locally using your example, and that call yields something very similar to the output you were looking for:</p>
+
+<pre><code>rec.array([(1, nan, 0.2, nan), (2, nan, nan, 0.5), (3, nan, 0.2, 0.5),
+       (4, 0.1, 0.2, nan), (5, 0.1, 0.2, 0.5), (6, 0.1, nan, 0.5),
+       (7, 0.1, nan, nan)],
+      dtype=[(u'ID', '&lt;i8'), (u'A', '&lt;f8'), (u'B', '&lt;f8'), (u'C', '&lt;f8')])
+</code></pre>
+
+<p>Note that this is a <code>recarray</code> rather than an <code>array</code>. You could move the result in to regular numpy array by calling its constructor as <code>np.array(df.to_records())</code>.</p>
+","2997408","","","","","2018-04-23 11:51:16","","","","1","","","","CC BY-SA 3.0"
+"51329290","2","","13187778","2018-07-13 16:21:15","","7","","<p>A Simpler Way for Example DataFrame: </p>
+
+<pre><code>df
+
+         gbm       nnet        reg
+0  12.097439  12.047437  12.100953
+1  12.109811  12.070209  12.095288
+2  11.720734  11.622139  11.740523
+3  11.824557  11.926414  11.926527
+4  11.800868  11.727730  11.729737
+5  12.490984  12.502440  12.530894
+</code></pre>
+
+<p>USE:</p>
+
+<pre><code>np.array(df.to_records().view(type=np.matrix))
+</code></pre>
+
+<p>GET:</p>
+
+<pre><code>array([[(0, 12.097439  , 12.047437, 12.10095324),
+        (1, 12.10981081, 12.070209, 12.09528824),
+        (2, 11.72073428, 11.622139, 11.74052253),
+        (3, 11.82455653, 11.926414, 11.92652727),
+        (4, 11.80086775, 11.72773 , 11.72973699),
+        (5, 12.49098389, 12.50244 , 12.53089367)]],
+dtype=(numpy.record, [('index', '&lt;i8'), ('gbm', '&lt;f8'), ('nnet', '&lt;f4'),
+       ('reg', '&lt;f8')]))
+</code></pre>
+","7105561","","4909087","","2019-02-14 21:47:14","2019-02-14 21:47:14","","","","0","","","","CC BY-SA 4.0"
+"54508052","2","","13187778","2019-02-03 22:05:04","","334","","<h1><code>df.to_numpy()</code> is better than <code>df.values</code>, here's why.</h1>
+<p>It's time to deprecate your usage of <code>values</code> and <code>as_matrix()</code>.</p>
+<p>pandas <code>v0.24.0</code> introduced two new methods for obtaining NumPy arrays from pandas objects:</p>
+<ol>
+<li><strong><code>to_numpy()</code></strong>, which is defined on <code>Index</code>, <code>Series</code>, and <code>DataFrame</code> objects, and</li>
+<li><strong><code>array</code></strong>, which is defined on <code>Index</code> and <code>Series</code> objects only.</li>
+</ol>
+<p>If you visit the v0.24 docs for <a href=""https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.values.html#pandas.DataFrame.values"" rel=""nofollow noreferrer""><code>.values</code></a>, you will see a big red warning that says:</p>
+<blockquote>
+<h3>Warning: We recommend using <code>DataFrame.to_numpy()</code> instead.</h3>
+</blockquote>
+<p>See <a href=""https://pandas-docs.github.io/pandas-docs-travis/whatsnew/v0.24.0.html#accessing-the-values-in-a-series-or-index"" rel=""nofollow noreferrer"">this section of the v0.24.0 release notes</a>, and <a href=""https://stackoverflow.com/a/54324513/4909087"">this answer</a> for more information.</p>
+<hr />
+<hr />
+<h1><strong>Towards Better Consistency: <a href=""http://pandas.pydata.org/pandas-docs/version/0.24.0rc1/api/generated/pandas.Series.to_numpy.html"" rel=""nofollow noreferrer""><code>to_numpy()</code></a></strong></h1>
+<p>In the spirit of better consistency throughout the API, a new method <code>to_numpy</code> has been introduced to extract the underlying NumPy array from DataFrames.</p>
+<pre><code># Setup
+df = pd.DataFrame(data={'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9]}, 
+                  index=['a', 'b', 'c'])
+
+# Convert the entire DataFrame
+df.to_numpy()
+# array([[1, 4, 7],
+#        [2, 5, 8],
+#        [3, 6, 9]])
+
+# Convert specific columns
+df[['A', 'C']].to_numpy()
+# array([[1, 7],
+#        [2, 8],
+#        [3, 9]])
+</code></pre>
+<p>As mentioned above, this method is also defined on <code>Index</code> and <code>Series</code> objects (see <a href=""https://stackoverflow.com/a/54324513/4909087"">here</a>).</p>
+<pre><code>df.index.to_numpy()
+# array(['a', 'b', 'c'], dtype=object)
+
+df['A'].to_numpy()
+#  array([1, 2, 3])
+</code></pre>
+<p>By default, a view is returned, so any modifications made will affect the original.</p>
+<pre><code>v = df.to_numpy()
+v[0, 0] = -1
+ 
+df
+   A  B  C
+a -1  4  7
+b  2  5  8
+c  3  6  9
+</code></pre>
+<p>If you need a copy instead, use <code>to_numpy(copy=True)</code>.</p>
+<hr />
+<h3>pandas &gt;= 1.0 update for ExtensionTypes</h3>
+<p>If you're using pandas 1.x, chances are you'll be dealing with extension types a lot more. You'll have to be a little more careful that these extension types are correctly converted.</p>
+<pre><code>a = pd.array([1, 2, None], dtype=&quot;Int64&quot;)                                  
+a                                                                          
+
+&lt;IntegerArray&gt;
+[1, 2, &lt;NA&gt;]
+Length: 3, dtype: Int64 
+
+# Wrong
+a.to_numpy()                                                               
+# array([1, 2, &lt;NA&gt;], dtype=object)  # yuck, objects
+
+# Correct
+a.to_numpy(dtype='float', na_value=np.nan)                                 
+# array([ 1.,  2., nan])
+
+# Also correct
+a.to_numpy(dtype='int', na_value=-1)
+# array([ 1,  2, -1])
+</code></pre>
+<p>This is <a href=""https://pandas.pydata.org/pandas-docs/stable/whatsnew/v1.0.0.html#arrays-integerarray-now-uses-pandas-na"" rel=""nofollow noreferrer"">called out in the docs</a>.</p>
+<hr />
+<h3>If you need the <code>dtypes</code> in the result...</h3>
+<p>As shown in another answer, <a href=""https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_records.html#pandas-dataframe-to-records"" rel=""nofollow noreferrer""><code>DataFrame.to_records</code></a> is a good way to do this.</p>
+<pre><code>df.to_records()
+# rec.array([('a', 1, 4, 7), ('b', 2, 5, 8), ('c', 3, 6, 9)],
+#           dtype=[('index', 'O'), ('A', '&lt;i8'), ('B', '&lt;i8'), ('C', '&lt;i8')])
+</code></pre>
+<p>This cannot be done with <code>to_numpy</code>, unfortunately. However, as an alternative, you can use <code>np.rec.fromrecords</code>:</p>
+<pre><code>v = df.reset_index()
+np.rec.fromrecords(v, names=v.columns.tolist())
+# rec.array([('a', 1, 4, 7), ('b', 2, 5, 8), ('c', 3, 6, 9)],
+#           dtype=[('index', '&lt;U1'), ('A', '&lt;i8'), ('B', '&lt;i8'), ('C', '&lt;i8')])
+</code></pre>
+<p>Performance wise, it's nearly the same (actually, using <code>rec.fromrecords</code> is a bit faster).</p>
+<pre><code>df2 = pd.concat([df] * 10000)
+
+%timeit df2.to_records()
+%%timeit
+v = df2.reset_index()
+np.rec.fromrecords(v, names=v.columns.tolist())
+
+12.9 ms ± 511 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+9.56 ms ± 291 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+</code></pre>
+<hr />
+<hr />
+<h1><strong>Rationale for Adding a New Method</strong></h1>
+<p><code>to_numpy()</code> (in addition to <code>array</code>) was added as a result of discussions under two GitHub issues <a href=""https://github.com/pandas-dev/pandas/issues/19954"" rel=""nofollow noreferrer"">GH19954</a> and <a href=""https://github.com/pandas-dev/pandas/issues/23623"" rel=""nofollow noreferrer"">GH23623</a>.</p>
+<p>Specifically, the docs mention the rationale:</p>
+<blockquote>
+<p>[...] with <code>.values</code> it was unclear whether the returned value would be the
+actual array, some transformation of it, or one of pandas custom
+arrays (like <code>Categorical</code>). For example, with <code>PeriodIndex</code>, <code>.values</code>
+generates a new <code>ndarray</code> of period objects each time. [...]</p>
+</blockquote>
+<p><code>to_numpy</code> aim to improve the consistency of the API, which is a major step in the right direction. <code>.values</code> will not be deprecated in the current version, but I expect this may happen at some point in the future, so I would urge users to migrate towards the newer API, as soon as you can.</p>
+<hr />
+<hr />
+<h1><strong>Critique of Other Solutions</strong></h1>
+<p><code>DataFrame.values</code> has inconsistent behaviour, as already noted.</p>
+<p><code>DataFrame.get_values()</code> is simply a wrapper around <code>DataFrame.values</code>, so everything said above applies.</p>
+<p><code>DataFrame.as_matrix()</code> is deprecated now, do <strong>NOT</strong> use!</p>
+","4909087","","11013417","","2020-11-21 02:21:39","2020-11-21 02:21:39","","","","12","","","","CC BY-SA 4.0"
+"56345849","2","","13187778","2019-05-28 15:46:22","","15","","<p>Try this:</p>
+
+<pre><code>a = numpy.asarray(df)
+</code></pre>
+","11484585","","","","","2019-05-28 15:46:22","","","","3","","","","CC BY-SA 4.0"
+"18691098","2","","18691084","2013-09-09 03:27:07","","62","","<p>According to <a href=""http://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html#numpy-reshape""><code>the documentation</code></a>:</p>
+
+<blockquote>
+  <p>newshape : int or tuple of ints</p>
+  
+  <p>The new shape should be compatible with the original shape. If an
+  integer, then the result will be a 1-D array of that length. One shape
+  dimension can be <strong>-1. In this case, the value is inferred from the
+  length of the array and remaining dimensions.</strong></p>
+</blockquote>
+","2225682","","","","","2013-09-09 03:27:07","","","","3","","","","CC BY-SA 3.0"
+"41430411","2","","18691084","2017-01-02 16:41:36","","17","","<pre><code>numpy.reshape(a,newshape,order{})
+</code></pre>
+<p>check the below link for more info.
+<a href=""https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html"" rel=""nofollow noreferrer"">https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html</a></p>
+<p>for the below example you mentioned the output explains the resultant vector to be a single row.(-1) indicates the number of rows to be 1.
+if the</p>
+<pre><code>a = numpy.matrix([[1, 2, 3, 4], [5, 6, 7, 8]])
+b = numpy.reshape(a, -1)
+</code></pre>
+<p>output:</p>
+<pre><code>matrix([[1, 2, 3, 4, 5, 6, 7, 8]])
+</code></pre>
+<p>this can be explained more precisely with another example:</p>
+<pre><code>b = np.arange(10).reshape((-1,1))
+</code></pre>
+<p>output:(is a 1 dimensional columnar array)</p>
+<pre><code>array([[0],
+       [1],
+       [2],
+       [3],
+       [4],
+       [5],
+       [6],
+       [7],
+       [8],
+       [9]])
+</code></pre>
+<p>or</p>
+<pre><code>b = np.arange(10).reshape((1,-1))
+</code></pre>
+<p>output:(is a 1 dimensional row array)</p>
+<pre><code>array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]])
+</code></pre>
+","6909299","","6117017","","2020-10-30 08:09:36","2020-10-30 08:09:36","","","","0","","","","CC BY-SA 4.0"
+"42476655","2","","18691084","2017-02-27 01:56:58","","13","","<p>It is fairly easy to understand. The ""-1"" stands for ""unknown dimension"" which can should be infered from another dimension. 
+In this case, if you set your matrix like this:</p>
+
+<pre><code>a = numpy.matrix([[1, 2, 3, 4], [5, 6, 7, 8]])
+</code></pre>
+
+<p>Modify your matrix like this:</p>
+
+<pre><code>b = numpy.reshape(a, -1)
+</code></pre>
+
+<p>It will call some deafult operations to the matrix a, which will return a 1-d numpy array/martrix.</p>
+
+<p>However, I don't think it is a good idea to use code like this. Why not try:</p>
+
+<pre><code>b = a.reshape(1,-1)
+</code></pre>
+
+<p>It will give you the same result and it's more clear for readers to understand: Set b as another shape of a. For a, we don't how much columns it should have(set it to -1!), but we want a 1-dimension array(set the first parameter to 1!).</p>
+","7627412","","","","","2017-02-27 01:56:58","","","","0","","","","CC BY-SA 3.0"
+"42510505","2","","18691084","2017-02-28 13:48:51","","639","","<p>The criterion to satisfy for providing the new shape is that <em>'The new shape should be compatible with the original shape'</em></p>
+
+<p>numpy allow us to give one of new shape parameter as -1 (eg: (2,-1) or (-1,3) but not (-1, -1)). It simply means that it is an unknown dimension and we want numpy to figure it out. And numpy will figure this by looking at the  <em>'length of the array and remaining dimensions'</em> and making sure it satisfies the above mentioned criteria</p>
+
+<p>Now see the example.</p>
+
+<pre><code>z = np.array([[1, 2, 3, 4],
+         [5, 6, 7, 8],
+         [9, 10, 11, 12]])
+z.shape
+(3, 4)
+</code></pre>
+
+<p>Now trying to reshape with (-1) . Result new shape is (12,) and is compatible with original shape (3,4) </p>
+
+<pre><code>z.reshape(-1)
+array([ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12])
+</code></pre>
+
+<p>Now trying to reshape with (-1, 1) . We have provided column as 1 but rows as unknown . So we get result new shape as (12, 1).again compatible with original shape(3,4) </p>
+
+<pre><code>z.reshape(-1,1)
+array([[ 1],
+   [ 2],
+   [ 3],
+   [ 4],
+   [ 5],
+   [ 6],
+   [ 7],
+   [ 8],
+   [ 9],
+   [10],
+   [11],
+   [12]])
+</code></pre>
+
+<p>The above is consistent with <code>numpy</code> advice/error message, to use <code>reshape(-1,1)</code> for a single feature; i.e. single column</p>
+
+<blockquote>
+  <p>Reshape your data using <code>array.reshape(-1, 1)</code> if your data has a <strong>single feature</strong></p>
+</blockquote>
+
+<p>New shape as (-1, 2). row unknown, column 2. we get result new shape as (6, 2)</p>
+
+<pre><code>z.reshape(-1, 2)
+array([[ 1,  2],
+   [ 3,  4],
+   [ 5,  6],
+   [ 7,  8],
+   [ 9, 10],
+   [11, 12]])
+</code></pre>
+
+<p>Now trying to keep column as unknown. New shape as (1,-1). i.e, row is 1, column unknown. we get result new shape as (1, 12)</p>
+
+<pre><code>z.reshape(1,-1)
+array([[ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12]])
+</code></pre>
+
+<p>The above is consistent with <code>numpy</code> advice/error message, to use <code>reshape(1,-1)</code> for a single sample; i.e. single row</p>
+
+<blockquote>
+  <p>Reshape your data using <code>array.reshape(1, -1)</code> if it contains a <strong>single sample</strong></p>
+</blockquote>
+
+<p>New shape (2, -1). Row 2, column unknown. we get result new shape as (2,6)</p>
+
+<pre><code>z.reshape(2, -1)
+array([[ 1,  2,  3,  4,  5,  6],
+   [ 7,  8,  9, 10, 11, 12]])
+</code></pre>
+
+<p>New shape as (3, -1). Row 3, column unknown. we get result new shape as (3,4)</p>
+
+<pre><code>z.reshape(3, -1)
+array([[ 1,  2,  3,  4],
+   [ 5,  6,  7,  8],
+   [ 9, 10, 11, 12]])
+</code></pre>
+
+<p>And finally, if we try to provide both dimension as unknown i.e new shape as (-1,-1). It will throw an error</p>
+
+<pre><code>z.reshape(-1, -1)
+ValueError: can only specify one unknown dimension
+</code></pre>
+","3232444","","1175496","","2019-07-15 05:46:48","2019-07-15 05:46:48","","","","5","","","","CC BY-SA 4.0"
+"42950520","2","","18691084","2017-03-22 11:35:35","","85","","<p>Used to reshape an array.</p>
+
+<p>Say we have a 3 dimensional array of dimensions 2 x 10 x 10:</p>
+
+<pre><code>r = numpy.random.rand(2, 10, 10) 
+</code></pre>
+
+<p>Now we want to reshape to 5 X 5 x 8:</p>
+
+<pre><code>numpy.reshape(r, shape=(5, 5, 8)) 
+</code></pre>
+
+<p>will do the job.</p>
+
+<p>Note that, once you fix first dim = 5 and second dim = 5, you don't need to determine third dimension. To assist your laziness, python gives the option of -1:</p>
+
+<pre><code>numpy.reshape(r, shape=(5, 5, -1)) 
+</code></pre>
+
+<p>will give you an array of shape = (5, 5, 8).</p>
+
+<p>Likewise, </p>
+
+<pre><code>numpy.reshape(r, shape=(50, -1)) 
+</code></pre>
+
+<p>will give you an array of shape = (50, 4)</p>
+
+<p>You can read more at <a href=""http://anie.me/numpy-reshape-transpose-theano-dimshuffle/"" rel=""noreferrer"">http://anie.me/numpy-reshape-transpose-theano-dimshuffle/</a></p>
+","4497662","","934239","","2018-04-23 12:37:07","2018-04-23 12:37:07","","","","0","","","","CC BY-SA 3.0"
+"53683974","2","","18691084","2018-12-08 15:26:46","","10","","<p><strong>Long story short</strong>: you set some dimensions and let NumPy set the remaining(s).</p>
+
+<pre><code>(userDim1, userDim2, ..., -1) --&gt;&gt;
+
+(userDim1, userDim1, ..., TOTAL_DIMENSION - (userDim1 + userDim2 + ...))
+</code></pre>
+","3782119","","","","","2018-12-08 15:26:46","","","","1","","","","CC BY-SA 4.0"
+"59071031","2","","18691084","2019-11-27 13:12:03","","8","","<p><em>It simply means that you are not sure about what number of rows  or columns you can give and you are asking numpy to suggest number of column or rows to get reshaped in.</em></p>
+
+<p>numpy provides last example for -1
+<a href=""https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html"" rel=""noreferrer"">https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html</a></p>
+
+<p>check below code and its output to better understand about (-1):</p>
+
+<p>CODE:-</p>
+
+<pre><code>import numpy
+a = numpy.matrix([[1, 2, 3, 4], [5, 6, 7, 8]])
+print(""Without reshaping  -&gt; "")
+print(a)
+b = numpy.reshape(a, -1)
+print(""HERE We don't know about what number we should give to row/col"")
+print(""Reshaping as (a,-1)"")
+print(b)
+c = numpy.reshape(a, (-1,2))
+print(""HERE We just know about number of columns"")
+print(""Reshaping as (a,(-1,2))"")
+print(c)
+d = numpy.reshape(a, (2,-1))
+print(""HERE We just know about number of rows"")
+print(""Reshaping as (a,(2,-1))"")
+print(d)
+</code></pre>
+
+<p>OUTPUT :-</p>
+
+<pre><code>Without reshaping  -&gt; 
+[[1 2 3 4]
+ [5 6 7 8]]
+HERE We don't know about what number we should give to row/col
+Reshaping as (a,-1)
+[[1 2 3 4 5 6 7 8]]
+HERE We just know about number of columns
+Reshaping as (a,(-1,2))
+[[1 2]
+ [3 4]
+ [5 6]
+ [7 8]]
+HERE We just know about number of rows
+Reshaping as (a,(2,-1))
+[[1 2 3 4]
+ [5 6 7 8]]
+</code></pre>
+","8864098","","","","","2019-11-27 13:12:03","","","","0","","","","CC BY-SA 4.0"
+"61134622","2","","18691084","2020-04-10 05:40:24","","8","","<pre><code>import numpy as np
+x = np.array([[2,3,4], [5,6,7]]) 
+
+# Convert any shape to 1D shape
+x = np.reshape(x, (-1)) # Making it 1 row -&gt; (6,)
+
+# When you don't care about rows and just want to fix number of columns
+x = np.reshape(x, (-1, 1)) # Making it 1 column -&gt; (6, 1)
+x = np.reshape(x, (-1, 2)) # Making it 2 column -&gt; (3, 2)
+x = np.reshape(x, (-1, 3)) # Making it 3 column -&gt; (2, 3)
+
+# When you don't care about columns and just want to fix number of rows
+x = np.reshape(x, (1, -1)) # Making it 1 row -&gt; (1, 6)
+x = np.reshape(x, (2, -1)) # Making it 2 row -&gt; (2, 3)
+x = np.reshape(x, (3, -1)) # Making it 3 row -&gt; (3, 2)
+</code></pre>
+","6013016","","","","","2020-04-10 05:40:24","","","","0","","","","CC BY-SA 4.0"
+"62031341","2","","18691084","2020-05-26 21:00:46","","6","","<p>The final outcome of the conversion is that the number of elements in the final array is same as that of the initial array or data frame.</p>
+
+<p>-1 corresponds to the unknown count of the row or column. we can think of it as <code>x</code>(unknown). <code>x</code> is obtained by dividing the  umber of elements in the original array by the other value of the ordered pair with -1.</p>
+
+<p>Examples</p>
+
+<p>12 elements with reshape(-1,1) corresponds to an array with <code>x</code>=12/1=12 rows and 1 column.</p>
+
+<p><br/></p>
+
+<p>12 elements with reshape(1,-1) corresponds to an array with 1 row and <code>x</code>=12/1=12 columns.</p>
+","2742343","","","","","2020-05-26 21:00:46","","","","0","","","","CC BY-SA 4.0"

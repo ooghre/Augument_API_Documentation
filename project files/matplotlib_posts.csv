@@ -1,0 +1,1813 @@
+Id,PostTypeId,AcceptedAnswerId,ParentId,CreationDate,DeletionDate,Score,ViewCount,Body,OwnerUserId,OwnerDisplayName,LastEditorUserId,LastEditorDisplayName,LastEditDate,LastActivityDate,Title,Tags,AnswerCount,CommentCount,FavoriteCount,ClosedDate,CommunityOwnedDate,ContentLicense
+"332311","2","","332289","2008-12-01 21:28:56","","383","","<blockquote>
+  <p><strong>Deprecation note:</strong><br>
+  As per the <a href=""https://matplotlib.org/faq/usage_faq.html#matplotlib-pyplot-and-pylab-how-are-they-related"" rel=""noreferrer"">official Matplotlib guide</a>, usage of the <code>pylab</code> module is no longer recommended. Please consider using the <code>matplotlib.pyplot</code> module instead, as described by <a href=""https://stackoverflow.com/a/41717533"">this other answer</a>.</p>
+</blockquote>
+
+<p>The following seems to work:</p>
+
+<pre><code>from pylab import rcParams
+rcParams['figure.figsize'] = 5, 10
+</code></pre>
+
+<p>This makes the figure's width 5 inches, and its height 10 <b>inches</b>. </p>
+
+<p>The Figure class then uses this as the default value for one of its arguments.</p>
+","40849","tatwright","3538012","","2017-08-06 05:35:50","2017-08-06 05:35:50","","","","8","","","","CC BY-SA 3.0"
+"334462","2","","332289","2008-12-02 16:01:32","","77","","<p>The first link in Google for <code>'matplotlib figure size'</code> is <a href=""http://www.scipy.org/Cookbook/Matplotlib/AdjustingImageSize"" rel=""noreferrer"">AdjustingImageSize</a> (<a href=""https://webcache.googleusercontent.com/search?q=cache:5oqjjm8c8UMJ:https://scipy.github.io/old-wiki/pages/Cookbook/Matplotlib/AdjustingImageSize.html+&amp;cd=2&amp;hl=en&amp;ct=clnk&amp;gl=fr"" rel=""noreferrer"">Google cache of the page</a>).</p>
+
+<p>Here's a test script from the above page. It creates <code>test[1-3].png</code> files of different sizes of the same image:</p>
+
+<pre><code>#!/usr/bin/env python
+""""""
+This is a small demo file that helps teach how to adjust figure sizes
+for matplotlib
+
+""""""
+
+import matplotlib
+print ""using MPL version:"", matplotlib.__version__
+matplotlib.use(""WXAgg"") # do this before pylab so you don'tget the default back end.
+
+import pylab
+import numpy as np
+
+# Generate and plot some simple data:
+x = np.arange(0, 2*np.pi, 0.1)
+y = np.sin(x)
+
+pylab.plot(x,y)
+F = pylab.gcf()
+
+# Now check everything with the defaults:
+DPI = F.get_dpi()
+print ""DPI:"", DPI
+DefaultSize = F.get_size_inches()
+print ""Default size in Inches"", DefaultSize
+print ""Which should result in a %i x %i Image""%(DPI*DefaultSize[0], DPI*DefaultSize[1])
+# the default is 100dpi for savefig:
+F.savefig(""test1.png"")
+# this gives me a 797 x 566 pixel image, which is about 100 DPI
+
+# Now make the image twice as big, while keeping the fonts and all the
+# same size
+F.set_size_inches( (DefaultSize[0]*2, DefaultSize[1]*2) )
+Size = F.get_size_inches()
+print ""Size in Inches"", Size
+F.savefig(""test2.png"")
+# this results in a 1595x1132 image
+
+# Now make the image twice as big, making all the fonts and lines
+# bigger too.
+
+F.set_size_inches( DefaultSize )# resetthe size
+Size = F.get_size_inches()
+print ""Size in Inches"", Size
+F.savefig(""test3.png"", dpi = (200)) # change the dpi
+# this also results in a 1595x1132 image, but the fonts are larger.
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>using MPL version: 0.98.1
+DPI: 80
+Default size in Inches [ 8.  6.]
+Which should result in a 640 x 480 Image
+Size in Inches [ 16.  12.]
+Size in Inches [ 16.  12.]
+</code></pre>
+
+<p>Two notes:</p>
+
+<ol>
+<li><p>The module comments and the actual output differ.</p></li>
+<li><p><a href=""https://stackoverflow.com/questions/335896/how-to-complete-this-python-function-to-save-in-the-same-folder#336001"">This answer</a> allows easily to combine all three images in one image file to see the difference in sizes.</p></li>
+</ol>
+","4279","J.F. Sebastian","-1","J.F. Sebastian","2017-05-23 12:18:30","2016-11-22 11:05:23","","","","1","","","","CC BY-SA 3.0"
+"638443","2","","332289","2009-03-12 12:41:35","","1210","","<p><a href=""https://matplotlib.org/api/_as_gen/matplotlib.pyplot.figure.html#matplotlib.pyplot.figure"" rel=""noreferrer"">figure</a> tells you the call signature:</p>
+
+<pre><code>from matplotlib.pyplot import figure
+figure(num=None, figsize=(8, 6), dpi=80, facecolor='w', edgecolor='k')
+</code></pre>
+
+<p><code>figure(figsize=(1,1))</code> would create an inch-by-inch image, which would be 80-by-80 pixels unless you also give a different dpi argument.</p>
+","26575","Jouni K. Sepp&#228;nen","2769997","","2018-07-18 18:34:47","2018-07-18 18:34:47","","","","6","","","","CC BY-SA 4.0"
+"4306340","2","","332289","2010-11-29 17:30:40","","793","","<p>If you've already got the figure created you can quickly do this:</p>
+
+<pre><code>fig = matplotlib.pyplot.gcf()
+fig.set_size_inches(18.5, 10.5)
+fig.savefig('test2png.png', dpi=100)
+</code></pre>
+
+<p>To propagate the size change to an existing gui window add <code>forward=True</code></p>
+
+<pre><code>fig.set_size_inches(18.5, 10.5, forward=True)
+</code></pre>
+","349043","","380231","","2015-06-07 19:40:46","2015-06-07 19:40:46","","","","3","","","","CC BY-SA 3.0"
+"22399608","2","","332289","2014-03-14 08:22:25","","38","","<p>Try commenting out the <code>fig = ...</code> line</p>
+
+<pre><code>%matplotlib inline
+import numpy as np
+import matplotlib.pyplot as plt
+
+N = 50
+x = np.random.rand(N)
+y = np.random.rand(N)
+area = np.pi * (15 * np.random.rand(N))**2
+
+fig = plt.figure(figsize=(18, 18))
+plt.scatter(x, y, s=area, alpha=0.5)
+plt.show()
+</code></pre>
+","125617","","","","","2014-03-14 08:22:25","","","","0","","","","CC BY-SA 3.0"
+"23903662","2","","332289","2014-05-28 05:47:34","","36","","<p>This works well for me:</p>
+
+<pre class=""lang-py prettyprint-override""><code>from matplotlib import pyplot as plt
+
+F = plt.gcf()
+Size = F.get_size_inches()
+F.set_size_inches(Size[0]*2, Size[1]*2, forward=True) # Set forward to True to resize window along with plot in figure.
+plt.show() # or plt.imshow(z_array) if using an animation, where z_array is a matrix or numpy array
+</code></pre>
+
+<p>This might also help: <a href=""http://matplotlib.1069221.n5.nabble.com/Resizing-figure-windows-td11424.html"" rel=""noreferrer"">http://matplotlib.1069221.n5.nabble.com/Resizing-figure-windows-td11424.html</a></p>
+","1224827","","5538922","","2020-02-02 22:09:02","2020-02-02 22:09:02","","","","0","","","","CC BY-SA 4.0"
+"24073700","2","","332289","2014-06-06 03:24:00","","300","","<p>Please try a simple code as following:</p>
+
+<pre><code>from matplotlib import pyplot as plt
+plt.figure(figsize=(1,1))
+x = [1,2,3]
+plt.plot(x, x)
+plt.show()
+</code></pre>
+
+<p>You need to set the figure size before you plot.</p>
+","456353","","199166","","2015-02-01 06:21:38","2015-02-01 06:21:38","","","","6","","","","CC BY-SA 3.0"
+"26601247","2","","332289","2014-10-28 05:08:13","","9","","<p>This resizes the figure immediately even after the figure has been drawn (at least using Qt4Agg/TkAgg - but not MacOSX - with matplotlib 1.4.0):</p>
+
+<pre><code>matplotlib.pyplot.get_current_fig_manager().resize(width_px, height_px)
+</code></pre>
+","752720","","","","","2014-10-28 05:08:13","","","","0","","","","CC BY-SA 3.0"
+"26650785","2","","332289","2014-10-30 10:38:37","","18","","<p>To increase size of your figure N times you need to insert this just before your pl.show():</p>
+
+<pre><code>N = 2
+params = pl.gcf()
+plSize = params.get_size_inches()
+params.set_size_inches( (plSize[0]*N, plSize[1]*N) )
+</code></pre>
+
+<p>It also works well with ipython notebook.</p>
+","215571","","","","","2014-10-30 10:38:37","","","","0","","","","CC BY-SA 3.0"
+"38750738","2","","332289","2016-08-03 18:04:36","","12","","<p>Since Matplotlib <a href=""https://github.com/matplotlib/matplotlib/issues/1369"" rel=""noreferrer"">isn't able</a> to use the metric system natively, if you want to specify the size of your figure in a reasonable unit of length such as centimeters, you can do the following (code from <a href=""https://stackoverflow.com/a/22787457/395857"">gns-ank</a>):</p>
+
+<pre><code>def cm2inch(*tupl):
+    inch = 2.54
+    if isinstance(tupl[0], tuple):
+        return tuple(i/inch for i in tupl[0])
+    else:
+        return tuple(i/inch for i in tupl)
+</code></pre>
+
+<p>Then you can use:</p>
+
+<pre><code>plt.figure(figsize=cm2inch(21, 29.7))
+</code></pre>
+","395857","","-1","","2017-05-23 11:55:02","2016-08-03 18:04:36","","","","0","","","","CC BY-SA 3.0"
+"39770939","2","","332289","2016-09-29 12:54:32","","120","","<p>In case you're looking for a way to change the figure size in <strong>Pandas</strong>, you could do e.g.:</p>
+
+<pre><code>df['some_column'].plot(figsize=(10, 5))
+</code></pre>
+
+<p>where <code>df</code> is a Pandas dataframe. Or, to use existing figure or axes</p>
+
+<pre><code>fig, ax = plt.subplots(figsize=(10,5))
+df['some_column'].plot(ax=ax)
+</code></pre>
+
+<p>If you want to change the default settings, you could do the following:</p>
+
+<pre><code>import matplotlib
+
+matplotlib.rc('figure', figsize=(10, 5))
+</code></pre>
+","2123555","","4124317","","2019-10-19 12:37:01","2019-10-19 12:37:01","","","","0","","","","CC BY-SA 4.0"
+"41717533","2","","332289","2017-01-18 10:55:51","","379","","<h1>USING  plt.rcParams</h1>
+<p>There is also this workaround in case you want to change the size without using the figure environment. So in case you are using <a href=""https://matplotlib.org/api/_as_gen/matplotlib.pyplot.figure.html"" rel=""noreferrer""><code>plt.plot()</code></a> for example, you can set a tuple with width and height.</p>
+<pre><code>import matplotlib.pyplot as plt
+plt.rcParams[&quot;figure.figsize&quot;] = (20,3)
+</code></pre>
+<p>This is very useful when you plot inline (e.g. with IPython Notebook). As @asamaier noticed is preferable to not put this statement in the same cell of the imports statements.</p>
+<h2>Conversion to cm</h2>
+<p>The <code>figsize</code> tuple accepts inches so if you want to set it in centimetres you have to divide them by 2.54 have a look to <a href=""https://stackoverflow.com/questions/14708695/specify-figure-size-in-centimeter-in-matplotlib"">this question</a>.</p>
+","2132157","","-1","","2020-06-20 09:12:55","2019-09-24 07:56:28","","","","9","","","","CC BY-SA 4.0"
+"47018826","2","","332289","2017-10-30 15:23:07","","50","","<p>You can simply use (from <a href=""https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html"" rel=""noreferrer"">matplotlib.figure.Figure</a>):</p>
+
+<pre><code>fig.set_size_inches(width,height)
+</code></pre>
+
+<p>As of Matplotlib 2.0.0, changes to your canvas will be visible immediately, as the <code>forward</code> keyword <a href=""https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html?highlight=set%20size%20inches#matplotlib.figure.Figure.set_size_inches"" rel=""noreferrer"">defaults to <code>True</code></a>.</p>
+
+<p>If you want to just <a href=""https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html?highlight=set%20size%20inches#matplotlib.figure.Figure.set_figheight"" rel=""noreferrer"">change the width <strong>or</strong> height</a> instead of both, you can use </p>
+
+<p><code>fig.set_figwidth(val)</code> or <code>fig.set_figheight(val)</code></p>
+
+<p>These will also immediately update your canvas, but only in Matplotlib 2.2.0 and newer.</p>
+
+<h3>For Older Versions</h3>
+
+<p>You need to specify <code>forward=True</code> explicitly in order to live-update your canvas in versions older than what is specified above. Note that the <code>set_figwidth</code> and <code>set_figheight</code> functions don’t support the <code>forward</code> parameter in versions older than Matplotlib 1.5.0.</p>
+","3745896","","3745896","","2018-03-09 18:51:15","2018-03-09 18:51:15","","","","0","","","","CC BY-SA 3.0"
+"56333222","2","","332289","2019-05-27 22:56:40","","6","","<p>Another option, to use the rc() function in matplotlib (the unit is inch)</p>
+
+<pre><code>import matplotlib
+matplotlib.rc('figure', figsize=[10,5])
+</code></pre>
+","4499942","","","","","2019-05-27 22:56:40","","","","0","","","","CC BY-SA 4.0"
+"56941236","2","","332289","2019-07-08 19:13:12","","64","","<pre><code>import matplotlib.pyplot as plt
+plt.figure(figsize=(20,10))
+plt.plot(x,y) ## This is your plot
+plt.show()
+</code></pre>
+
+<p>You can also use:</p>
+
+<pre><code>fig, ax = plt.subplots(figsize=(20, 10))
+</code></pre>
+","11098599","","","","","2019-07-08 19:13:12","","","","0","","","","CC BY-SA 4.0"
+"59108174","2","","332289","2019-11-29 16:18:01","","8","","<p>Generalizing and simplifying psihodelia's answer.
+If you want to change the current size of the figure by a factor <code>sizefactor</code></p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+# here goes your code
+
+fig_size = plt.gcf().get_size_inches() #Get current size
+sizefactor = 0.8 #Set a zoom factor
+# Modify the current size by the factor
+plt.gcf().set_size_inches(sizefactor * fig_size) 
+</code></pre>
+
+<p>After changing the current size, it might occur that you have to fine tune the <em>subplot layout</em>. You can do that in the figure window GUI, or by means of the command <a href=""https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.subplots_adjust.html"" rel=""noreferrer"">subplots_adjust</a></p>
+
+<p>For example,</p>
+
+<pre><code>plt.subplots_adjust(left=0.16, bottom=0.19, top=0.82)
+</code></pre>
+","4428520","","4428520","","2019-11-29 16:30:23","2019-11-29 16:30:23","","","","0","","","","CC BY-SA 4.0"
+"3584933","2","","3584805","2010-08-27 14:05:22","","501","","<p>These are subplot grid parameters encoded as a single integer. For example, ""111"" means ""1x1 grid, first subplot"" and ""234"" means ""2x3 grid, 4th subplot"".</p>
+
+<p>Alternative form for <code>add_subplot(111)</code> is <code>add_subplot(1, 1, 1)</code>.</p>
+","20310","","","","","2010-08-27 14:05:22","","","","4","","","","CC BY-SA 2.5"
+"9850790","2","","3584805","2012-03-24 09:59:42","","43","","<p>The answer from Constantin is spot on but for more background this behavior is inherited from Matlab. </p>
+
+<p>The Matlab behavior is explained in the <a href=""http://www.mathworks.com/help/matlab/ref/subplot.html"" rel=""noreferrer"">Figure Setup - Displaying Multiple Plots per Figure</a> section of the Matlab documentation.</p>
+
+<blockquote>
+  <p>subplot(m,n,i) breaks the figure window into an m-by-n matrix of small
+  subplots and selects the ithe subplot for the current plot. The plots
+  are numbered along the top row of the figure window, then the second
+  row, and so forth.</p>
+</blockquote>
+","1289551","","2859614","","2015-06-09 19:49:53","2015-06-09 19:49:53","","","","3","","","","CC BY-SA 3.0"
+"11404223","2","","3584805","2012-07-09 22:37:43","","530","","<p>I think this would be best explained by the following picture:</p>
+
+<p><img src=""https://i.stack.imgur.com/AEGXG.png"" alt=""enter image description here""></p>
+
+<p>To initialize the above, one would type:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+fig = plt.figure()
+fig.add_subplot(221)   #top left
+fig.add_subplot(222)   #top right
+fig.add_subplot(223)   #bottom left
+fig.add_subplot(224)   #bottom right 
+plt.show()
+</code></pre>
+","1438397","","4124317","","2019-02-04 09:54:22","2019-02-04 09:54:22","","","","6","","","","CC BY-SA 4.0"
+"46986694","2","","3584805","2017-10-28 05:52:32","","20","","<p>My solution is</p>
+
+<pre><code>fig = plt.figure()
+fig.add_subplot(1, 2, 1)   #top and bottom left
+fig.add_subplot(2, 2, 2)   #top right
+fig.add_subplot(2, 2, 4)   #bottom right 
+plt.show()
+</code></pre>
+
+<p><a href=""https://i.stack.imgur.com/mWRy3.jpg"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/mWRy3.jpg"" alt=""2x2 grid with 1 and 3 merge""></a></p>
+","2745140","","","","","2017-10-28 05:52:32","","","","0","","","","CC BY-SA 3.0"
+"53961610","2","","3584805","2018-12-28 16:38:48","","10","","<p><code>fig.add_subplot(ROW,COLUMN,POSITION)</code></p>
+
+<ul>
+<li>ROW=number of rows</li>
+<li>COLUMN=number of columns</li>
+<li>POSITION= position of the graph you are plotting </li>
+</ul>
+
+<p><strong><em>Examples</em></strong></p>
+
+<pre><code>`fig.add_subplot(111)` #There is only one subplot or graph  
+`fig.add_subplot(211)`  *and*  `fig.add_subplot(212)` 
+</code></pre>
+
+<p>There are total 2 rows,1 column therefore 2 subgraphs can be plotted. Its location is 1st. There are total 2 rows,1 column therefore 2 subgraphs can be plotted.Its location is 2nd</p>
+","10843785","","8436617","","2018-12-28 17:19:31","2018-12-28 17:19:31","","","","0","","","","CC BY-SA 4.0"
+"56198642","2","","3584805","2019-05-18 11:49:02","","14","","<p><a href=""https://i.stack.imgur.com/UILNS.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/UILNS.png"" alt=""enter image description here""></a>      </p>
+
+<pre><code>import matplotlib.pyplot as plt
+plt.figure(figsize=(8,8))
+plt.subplot(3,2,1)
+plt.subplot(3,2,3)
+plt.subplot(3,2,5)
+plt.subplot(2,2,2)
+plt.subplot(2,2,4)
+</code></pre>
+
+<p>The first code creates the first subplot in a layout that has 3 rows and 2 columns.</p>
+
+<p>The three graphs in the first column denote the 3 rows. The second plot comes just below the first plot in the same column and so on.</p>
+
+<p>The last two plots have arguments <code>(2, 2)</code> denoting that the second column has only two rows, the position parameters move row wise.</p>
+","11308858","","10415695","","2019-05-18 12:37:11","2019-05-18 12:37:11","","","","0","","","","CC BY-SA 4.0"
+"3900167","2","","3899980","2010-10-10 11:49:11","","710","","<p>From the <a href=""http://matplotlib.sourceforge.net/api/matplotlib_configuration_api.html#matplotlib.rc"" rel=""noreferrer"">matplotlib documentation</a>, </p>
+
+<pre><code>font = {'family' : 'normal',
+        'weight' : 'bold',
+        'size'   : 22}
+
+matplotlib.rc('font', **font)
+</code></pre>
+
+<p>This sets the font of all items to the font specified by the kwargs object, <code>font</code>.</p>
+
+<p>Alternatively, you could also use the <code>rcParams</code> <code>update</code> method as suggested in <a href=""https://stackoverflow.com/a/6441839/605121"">this answer</a>:</p>
+
+<pre><code>matplotlib.rcParams.update({'font.size': 22})
+</code></pre>
+
+<p>or</p>
+
+<pre><code>import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 22})
+</code></pre>
+
+<p>You can find a full list of available properties on the <a href=""http://matplotlib.org/users/customizing.html"" rel=""noreferrer"">Customizing matplotlib page</a>.</p>
+","445210","","6557588","","2018-09-16 19:37:30","2018-09-16 19:37:30","","","","12","","","","CC BY-SA 4.0"
+"6441839","2","","3899980","2011-06-22 14:46:44","","204","","<pre><code>matplotlib.rcParams.update({'font.size': 22})
+</code></pre>
+","605121","","","","","2011-06-22 14:46:44","","","","1","","","","CC BY-SA 3.0"
+"14971193","2","","3899980","2013-02-20 02:13:32","","207","","<p>If you want to change the fontsize for just a specific plot that has already been created, try this:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+ax = plt.subplot(111, xlabel='x', ylabel='y', title='title')
+for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+             ax.get_xticklabels() + ax.get_yticklabels()):
+    item.set_fontsize(20)
+</code></pre>
+","877493","","","","","2013-02-20 02:13:32","","","","5","","","","CC BY-SA 3.0"
+"23572192","2","","3899980","2014-05-09 19:08:00","","73","","<p><strong>Update:</strong> See the bottom of the answer for a slightly better way of doing it.<br>
+<strong>Update #2:</strong> I've figured out changing legend title fonts too.<br>
+<strong>Update #3:</strong> There is a <a href=""https://github.com/matplotlib/matplotlib/issues/8017"" rel=""noreferrer"">bug in Matplotlib 2.0.0</a> that's causing tick labels for logarithmic axes to revert to the default font. Should be fixed in 2.0.1 but I've included the workaround in the 2nd part of the answer.</p>
+
+<p>This answer is for anyone trying to change all the fonts, including for the legend, and for anyone trying to use different fonts and sizes for each thing. It does not use rc (which doesn't seem to work for me). It is rather cumbersome but I could not get to grips with any other method personally. It basically combines ryggyr's answer here with other answers on SO.</p>
+
+<pre><code>import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as font_manager
+
+# Set the font dictionaries (for plot title and axis titles)
+title_font = {'fontname':'Arial', 'size':'16', 'color':'black', 'weight':'normal',
+              'verticalalignment':'bottom'} # Bottom vertical alignment for more space
+axis_font = {'fontname':'Arial', 'size':'14'}
+
+# Set the font properties (for use in legend)   
+font_path = 'C:\Windows\Fonts\Arial.ttf'
+font_prop = font_manager.FontProperties(fname=font_path, size=14)
+
+ax = plt.subplot() # Defines ax variable by creating an empty plot
+
+# Set the tick labels font
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontname('Arial')
+    label.set_fontsize(13)
+
+x = np.linspace(0, 10)
+y = x + np.random.normal(x) # Just simulates some data
+
+plt.plot(x, y, 'b+', label='Data points')
+plt.xlabel(""x axis"", **axis_font)
+plt.ylabel(""y axis"", **axis_font)
+plt.title(""Misc graph"", **title_font)
+plt.legend(loc='lower right', prop=font_prop, numpoints=1)
+plt.text(0, 0, ""Misc text"", **title_font)
+plt.show()
+</code></pre>
+
+<p>The benefit of this method is that, by having several font dictionaries, you can choose different fonts/sizes/weights/colours for the various titles, choose the font for the tick labels, and choose the font for the legend, all independently.</p>
+
+<hr>
+
+<p><strong>UPDATE:</strong></p>
+
+<p>I have worked out a slightly different, less cluttered approach that does away with font dictionaries, and allows any font on your system, even .otf fonts. To have separate fonts for each thing, just write more <code>font_path</code> and <code>font_prop</code> like variables.</p>
+
+<pre><code>import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as font_manager
+import matplotlib.ticker
+# Workaround for Matplotlib 2.0.0 log axes bug https://github.com/matplotlib/matplotlib/issues/8017 :
+matplotlib.ticker._mathdefault = lambda x: '\\mathdefault{%s}'%x 
+
+# Set the font properties (can use more variables for more fonts)
+font_path = 'C:\Windows\Fonts\AGaramondPro-Regular.otf'
+font_prop = font_manager.FontProperties(fname=font_path, size=14)
+
+ax = plt.subplot() # Defines ax variable by creating an empty plot
+
+# Define the data to be plotted
+x = np.linspace(0, 10)
+y = x + np.random.normal(x)
+plt.plot(x, y, 'b+', label='Data points')
+
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontproperties(font_prop)
+    label.set_fontsize(13) # Size here overrides font_prop
+
+plt.title(""Exponentially decaying oscillations"", fontproperties=font_prop,
+          size=16, verticalalignment='bottom') # Size here overrides font_prop
+plt.xlabel(""Time"", fontproperties=font_prop)
+plt.ylabel(""Amplitude"", fontproperties=font_prop)
+plt.text(0, 0, ""Misc text"", fontproperties=font_prop)
+
+lgd = plt.legend(loc='lower right', prop=font_prop) # NB different 'prop' argument for legend
+lgd.set_title(""Legend"", prop=font_prop)
+
+plt.show()
+</code></pre>
+
+<p>Hopefully this is a comprehensive answer</p>
+","3217306","","3217306","","2017-04-14 20:07:08","2017-04-14 20:07:08","","","","0","","","","CC BY-SA 3.0"
+"27024389","2","","3899980","2014-11-19 18:36:20","","8","","<p>Based on the above stuff:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
+fontPath = ""/usr/share/fonts/abc.ttf""
+font = fm.FontProperties(fname=fontPath, size=10)
+font2 = fm.FontProperties(fname=fontPath, size=24)
+
+fig = plt.figure(figsize=(32, 24))
+fig.text(0.5, 0.93, ""This is my Title"", horizontalalignment='center', fontproperties=font2)
+
+plot = fig.add_subplot(1, 1, 1)
+
+plot.xaxis.get_label().set_fontproperties(font)
+plot.yaxis.get_label().set_fontproperties(font)
+plot.legend(loc='upper right', prop=font)
+
+for label in (plot.get_xticklabels() + plot.get_yticklabels()):
+    label.set_fontproperties(font)
+</code></pre>
+","1943525","","1943525","","2014-11-19 18:41:56","2014-11-19 18:41:56","","","","0","","","","CC BY-SA 3.0"
+"37057920","2","","3899980","2016-05-05 18:39:47","","45","","<p>Here is a totally <em>different</em> approach that works surprisingly well to change the font sizes:</p>
+
+<p>Change the <strong>figure size</strong>!</p>
+
+<p>I usually use code like this:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+import numpy as np
+fig = plt.figure(figsize=(4,3))
+ax = fig.add_subplot(111)
+x = np.linspace(0,6.28,21)
+ax.plot(x, np.sin(x), '-^', label=""1 Hz"")
+ax.set_title(""Oscillator Output"")
+ax.set_xlabel(""Time (s)"")
+ax.set_ylabel(""Output (V)"")
+ax.grid(True)
+ax.legend(loc=1)
+fig.savefig('Basic.png', dpi=300)
+</code></pre>
+
+<p>The <em>smaller</em> you make the figure size, the <em>larger</em> the font is <em>relative to the plot</em>. This also upscales the markers. Note I also set the <code>dpi</code> or dot per inch. I learned this from a posting the AMTA (American Modeling Teacher of America) forum.
+Example from above code: <a href=""https://i.stack.imgur.com/uEjJN.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/uEjJN.png"" alt=""enter image description here""></a></p>
+","3307405","","7699859","","2018-08-05 18:08:36","2018-08-05 18:08:36","","","","5","","","","CC BY-SA 4.0"
+"39566040","2","","3899980","2016-09-19 05:39:01","","370","","<p>If you are a control freak like me, you may want to explicitly set all your font sizes:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+SMALL_SIZE = 8
+MEDIUM_SIZE = 10
+BIGGER_SIZE = 12
+
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+</code></pre>
+
+<p>Note that you can also set the sizes calling the <code>rc</code> method on <code>matplotlib</code>:</p>
+
+<pre><code>import matplotlib
+
+SMALL_SIZE = 8
+matplotlib.rc('font', size=SMALL_SIZE)
+matplotlib.rc('axes', titlesize=SMALL_SIZE)
+
+# and so on ...
+</code></pre>
+","1476240","","1476240","","2017-01-31 17:15:45","2017-01-31 17:15:45","","","","4","","","","CC BY-SA 3.0"
+"53086342","2","","3899980","2018-10-31 14:58:31","","34","","<p>Use <code>plt.tick_params(labelsize=14)</code></p>
+","277345","","","","","2018-10-31 14:58:31","","","","2","","","","CC BY-SA 4.0"
+"55780841","2","","3899980","2019-04-21 07:35:26","","30","","<p>You can use <code>plt.rcParams[&quot;font.size&quot;]</code> for setting <code>font_size</code> in <code>matplotlib</code> and also you can use <code>plt.rcParams[&quot;font.family&quot;]</code> for setting <code>font_family</code> in <code>matplotlib</code>. Try this example:</p>
+<pre><code>import matplotlib.pyplot as plt
+plt.style.use('seaborn-whitegrid')
+
+label = [1,2,3,4,5,6,7,8]
+x = [0.001906,0.000571308,0.0020305,0.0037422,0.0047095,0.000846667,0.000819,0.000907]
+y = [0.2943301,0.047778308,0.048003167,0.1770876,0.532489833,0.024611333,0.157498667,0.0272095]
+
+
+plt.ylabel('eigen centrality')
+plt.xlabel('betweenness centrality')
+plt.text(0.001906, 0.2943301, '1 ', ha='right', va='center')
+plt.text(0.000571308, 0.047778308, '2 ', ha='right', va='center')
+plt.text(0.0020305, 0.048003167, '3 ', ha='right', va='center')
+plt.text(0.0037422, 0.1770876, '4 ', ha='right', va='center')
+plt.text(0.0047095, 0.532489833, '5 ', ha='right', va='center')
+plt.text(0.000846667, 0.024611333, '6 ', ha='right', va='center')
+plt.text(0.000819, 0.157498667, '7 ', ha='right', va='center')
+plt.text(0.000907, 0.0272095, '8 ', ha='right', va='center')
+plt.rcParams[&quot;font.family&quot;] = &quot;Times New Roman&quot;
+plt.rcParams[&quot;font.size&quot;] = &quot;50&quot;
+plt.plot(x, y, 'o', color='blue')
+</code></pre>
+<p><a href=""https://i.stack.imgur.com/cX0sy.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/cX0sy.png"" alt=""Please, see the output:"" /></a></p>
+","8461493","","8461493","","2020-07-03 20:13:37","2020-07-03 20:13:37","","","","0","","","","CC BY-SA 4.0"
+"59773994","2","","3899980","2020-01-16 16:28:39","","14","","<p>Here is what I generally use in Jupyter Notebook:</p>
+
+<pre><code># Jupyter Notebook settings
+
+from IPython.core.display import display, HTML
+display(HTML(""&lt;style&gt;.container { width:95% !important; }&lt;/style&gt;""))
+%autosave 0
+%matplotlib inline
+%load_ext autoreload
+%autoreload 2
+
+from IPython.core.interactiveshell import InteractiveShell
+InteractiveShell.ast_node_interactivity = ""all""
+
+
+# Imports for data analysis
+import pandas as pd
+import matplotlib.pyplot as plt
+pd.set_option('display.max_rows', 2500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.max_colwidth', 2000)
+pd.set_option('display.width', 2000)
+pd.set_option('display.float_format', lambda x: '%.3f' % x)
+
+#size=25
+size=15
+params = {'legend.fontsize': 'large',
+          'figure.figsize': (20,8),
+          'axes.labelsize': size,
+          'axes.titlesize': size,
+          'xtick.labelsize': size*0.75,
+          'ytick.labelsize': size*0.75,
+          'axes.titlepad': 25}
+plt.rcParams.update(params)
+</code></pre>
+","4561314","","","","","2020-01-16 16:28:39","","","","0","","","","CC BY-SA 4.0"
+"4700674","2","","4700614","2011-01-15 16:21:37","","79","","<ul>
+<li>You can make the legend text smaller by specifying <code>set_size</code> of <code>FontProperties</code>.</li>
+<li>Resources:
+<ul>
+<li><a href=""https://matplotlib.org/tutorials/intermediate/legend_guide.html#legend-guide"" rel=""noreferrer"">Legend guide</a></li>
+<li><a href=""https://matplotlib.org/api/legend_api.html"" rel=""noreferrer""><code>matplotlib.legend</code></a></li>
+<li><a href=""https://matplotlib.org/api/_as_gen/matplotlib.pyplot.legend.html#matplotlib.pyplot.legend"" rel=""noreferrer""><code>matplotlib.pyplot.legend</code></a></li>
+<li><a href=""https://matplotlib.org/3.3.1/api/font_manager_api.html"" rel=""noreferrer""><code>matplotlib.font_manager</code></a>
+<ul>
+<li><a href=""https://matplotlib.org/3.3.1/api/font_manager_api.html#matplotlib.font_manager.FontProperties.set_size"" rel=""noreferrer""><code>set_size(self, size)</code></a></li>
+<li>Valid font size are xx-small, x-small, small, medium, large, x-large, xx-large, larger, smaller, None</li>
+</ul>
+</li>
+<li><a href=""https://realpython.com/python-matplotlib-guide/"" rel=""noreferrer"">Real Python: Python Plotting With Matplotlib (Guide)</a></li>
+</ul>
+</li>
+</ul>
+<pre class=""lang-py prettyprint-override""><code>import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+
+fontP = FontProperties()
+fontP.set_size('xx-small')
+
+p1, = plt.plot([1, 2, 3], label='Line 1')
+p2, = plt.plot([3, 2, 1], label='Line 2')
+plt.legend(handles=[p1, p2], title='title', bbox_to_anchor=(1.05, 1), loc='upper left', prop=fontP)
+</code></pre>
+<p><a href=""https://i.stack.imgur.com/OMgiC.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/OMgiC.png"" alt=""enter image description here"" /></a></p>
+<ul>
+<li>As noted by <a href=""https://stackoverflow.com/users/365102/mateen-ulhaq"">Mateen Ulhaq</a>, <code>fontsize='xx-small'</code> also works, without importing <code>FontProperties</code>.</li>
+</ul>
+<pre class=""lang-py prettyprint-override""><code>plt.legend(handles=[p1, p2], title='title', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='xx-small')
+</code></pre>
+","287727","","7758804","","2020-08-18 22:22:44","2020-08-18 22:22:44","","","","0","","","","CC BY-SA 4.0"
+"4700762","2","","4700614","2011-01-15 16:41:50","","92","","<p>To place the legend outside the plot area, use <code>loc</code> and <code>bbox_to_anchor</code> keywords of <code>legend()</code>. For example, the following code will place the legend to the right of the plot area:</p>
+
+<pre><code>legend(loc=""upper left"", bbox_to_anchor=(1,1))
+</code></pre>
+
+<p>For more info, see the <a href=""http://matplotlib.org/users/legend_guide.html#plotting-guide-legend"" rel=""noreferrer"">legend guide</a></p>
+","100217","","1714692","","2019-01-18 11:54:28","2019-01-18 11:54:28","","","","2","","","","CC BY-SA 4.0"
+"4701285","2","","4700614","2011-01-15 18:12:27","","1908","","<p>There are a number of ways to do what you want.  To add to what @inalis and @Navi already said, you can use the <code>bbox_to_anchor</code> keyword argument to place the legend partially outside the axes and/or decrease the font size.</p>
+<p>Before you consider decreasing the font size (which can make things awfully hard to read), try playing around with placing the legend in different places:</p>
+<p>So, let's start with a generic example:</p>
+<pre><code>import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.arange(10)
+
+fig = plt.figure()
+ax = plt.subplot(111)
+
+for i in xrange(5):
+    ax.plot(x, i * x, label='$y = %ix$' % i)
+
+ax.legend()
+
+plt.show()
+</code></pre>
+<p><img src=""https://i.stack.imgur.com/LQ8xkm.png"" alt=""alt text"" /></p>
+<p>If we do the same thing, but use the <code>bbox_to_anchor</code> keyword argument we can shift the legend slightly outside the axes boundaries:</p>
+<pre><code>import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.arange(10)
+
+fig = plt.figure()
+ax = plt.subplot(111)
+
+for i in xrange(5):
+    ax.plot(x, i * x, label='$y = %ix$' % i)
+ 
+ax.legend(bbox_to_anchor=(1.1, 1.05))
+
+plt.show()
+</code></pre>
+<p><img src=""https://i.stack.imgur.com/OtE5Um.png"" alt=""alt text"" /></p>
+<p>Similarly, you can make the legend more horizontal and/or put it at the top of the figure (I'm also turning on rounded corners and a simple drop shadow):</p>
+<pre><code>import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.arange(10)
+
+fig = plt.figure()
+ax = plt.subplot(111)
+
+for i in xrange(5):
+    line, = ax.plot(x, i * x, label='$y = %ix$'%i)
+
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+          ncol=3, fancybox=True, shadow=True)
+plt.show()
+</code></pre>
+<p><img src=""https://i.stack.imgur.com/zgtBlm.png"" alt=""alt text"" /></p>
+<p>Alternatively, you can shrink the current plot's width, and put the legend entirely outside the axis of the figure (note: if you use <a href=""https://matplotlib.org/3.2.1/tutorials/intermediate/tight_layout_guide.html"" rel=""noreferrer""><code>tight_layout()</code></a>, then leave out <code>ax.set_position()</code>:</p>
+<pre><code>import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.arange(10)
+
+fig = plt.figure()
+ax = plt.subplot(111)
+
+for i in xrange(5):
+    ax.plot(x, i * x, label='$y = %ix$'%i)
+
+# Shrink current axis by 20%
+box = ax.get_position()
+ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+# Put a legend to the right of the current axis
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+plt.show()
+</code></pre>
+<p><img src=""https://i.stack.imgur.com/v34g8m.png"" alt=""alt text"" /></p>
+<p>And in a similar manner, you can shrink the plot vertically, and put the a horizontal legend at the bottom:</p>
+<pre><code>import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.arange(10)
+
+fig = plt.figure()
+ax = plt.subplot(111)
+
+for i in xrange(5):
+    line, = ax.plot(x, i * x, label='$y = %ix$'%i)
+
+# Shrink current axis's height by 10% on the bottom
+box = ax.get_position()
+ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                 box.width, box.height * 0.9])
+
+# Put a legend below current axis
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+          fancybox=True, shadow=True, ncol=5)
+
+plt.show()
+</code></pre>
+<p><img src=""https://i.stack.imgur.com/cXcYam.png"" alt=""alt text"" /></p>
+<p>Have a look at the <a href=""http://matplotlib.org/users/legend_guide.html#legend-location"" rel=""noreferrer"">matplotlib legend guide</a>. You might also take a look at <a href=""http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.figlegend"" rel=""noreferrer""><code>plt.figlegend()</code></a>.</p>
+","325565","","7758804","","2020-08-18 21:15:34","2020-08-18 21:15:34","","","","10","","","","CC BY-SA 4.0"
+"14988532","2","","4700614","2013-02-20 19:41:10","","56","","<p><strong>Short Answer</strong>: Invoke draggable on the legend and interactively move it wherever you want:</p>
+
+<pre><code>ax.legend().draggable()
+</code></pre>
+
+<p><strong>Long Answer</strong>: If you rather prefer to place the legend interactively/manually rather than programmatically, you can toggle the draggable mode of the legend so that you can drag it to wherever you want. Check the example below:</p>
+
+<pre><code>import matplotlib.pylab as plt
+import numpy as np
+#define the figure and get an axes instance
+fig = plt.figure()
+ax = fig.add_subplot(111)
+#plot the data
+x = np.arange(-5, 6)
+ax.plot(x, x*x, label='y = x^2')
+ax.plot(x, x*x*x, label='y = x^3')
+ax.legend().draggable()
+plt.show()
+</code></pre>
+","777530","","777530","","2016-02-09 17:01:02","2016-02-09 17:01:02","","","","1","","","","CC BY-SA 3.0"
+"21659899","2","","4700614","2014-02-09 13:55:14","","9","","<p>As noted, you could also place the legend in the plot, or slightly off it to the edge as well. Here is an example using the <a href=""http://plot.ly/api/python"" rel=""noreferrer"">Plotly Python API</a>, made with an <a href=""http://nbviewer.ipython.org/github/plotly/IPython-plotly/blob/master/Plotly%20gets%20LaTeXy.ipynb"" rel=""noreferrer"">IPython Notebook</a>. I'm on the team. </p>
+
+<p>To begin, you'll want to install the necessary packages:</p>
+
+<pre><code>import plotly
+import math
+import random
+import numpy as np
+</code></pre>
+
+<p>Then, install Plotly:</p>
+
+<pre><code>un='IPython.Demo'
+k='1fw3zw2o13'
+py = plotly.plotly(username=un, key=k)
+
+
+def sin(x,n):
+sine = 0
+for i in range(n):
+    sign = (-1)**i
+    sine = sine + ((x**(2.0*i+1))/math.factorial(2*i+1))*sign
+return sine
+
+x = np.arange(-12,12,0.1)
+
+anno = {
+'text': '$\\sum_{k=0}^{\\infty} \\frac {(-1)^k x^{1+2k}}{(1 + 2k)!}$',
+'x': 0.3, 'y': 0.6,'xref': ""paper"", 'yref': ""paper"",'showarrow': False,
+'font':{'size':24}
+}
+
+l = {
+'annotations': [anno], 
+'title': 'Taylor series of sine',
+'xaxis':{'ticks':'','linecolor':'white','showgrid':False,'zeroline':False},
+'yaxis':{'ticks':'','linecolor':'white','showgrid':False,'zeroline':False},
+'legend':{'font':{'size':16},'bordercolor':'white','bgcolor':'#fcfcfc'}
+}
+
+py.iplot([{'x':x, 'y':sin(x,1), 'line':{'color':'#e377c2'}, 'name':'$x\\\\$'},\
+      {'x':x, 'y':sin(x,2), 'line':{'color':'#7f7f7f'},'name':'$ x-\\frac{x^3}{6}$'},\
+      {'x':x, 'y':sin(x,3), 'line':{'color':'#bcbd22'},'name':'$ x-\\frac{x^3}{6}+\\frac{x^5}{120}$'},\
+      {'x':x, 'y':sin(x,4), 'line':{'color':'#17becf'},'name':'$ x-\\frac{x^5}{120}$'}], layout=l)
+</code></pre>
+
+<p>This creates your graph, and allows you a chance to keep the legend within the plot itself. The default for the legend if it is not set is to place it in the plot, as shown here.  </p>
+
+<p><img src=""https://i.stack.imgur.com/SZgAG.png"" alt=""enter image description here""></p>
+
+<p>For an alternative placement, you can closely align the edge of the graph and border of the legend, and remove border lines for a closer fit. </p>
+
+<p><img src=""https://i.stack.imgur.com/Ev3xA.png"" alt=""enter image description here""></p>
+
+<p>You can move and re-style the legend and graph with code, or with the GUI. To shift the legend, you have the following options to position the legend inside the graph by assigning x and y values of &lt;= 1. E.g : </p>
+
+<ul>
+<li><code>{""x"" : 0,""y"" : 0}</code> -- Bottom Left </li>
+<li><code>{""x"" : 1, ""y"" : 0}</code> -- Bottom Right </li>
+<li><code>{""x"" : 1, ""y"" : 1}</code> -- Top Right </li>
+<li><code>{""x"" : 0, ""y"" : 1}</code> -- Top Left </li>
+<li><code>{""x"" :.5, ""y"" : 0}</code> -- Bottom Center </li>
+<li><code>{""x"": .5, ""y"" : 1}</code> -- Top Center</li>
+</ul>
+
+<p>In this case, we choose the upper right, <code>legendstyle = {""x"" : 1, ""y"" : 1}</code>, also described in <a href=""http://plot.ly/api/python/docs/legends"" rel=""noreferrer"">the documentation</a>:</p>
+
+<p><img src=""https://i.stack.imgur.com/O8vCG.png"" alt=""enter image description here""></p>
+","2741380","","","","","2014-02-09 13:55:14","","","","1","","","","CC BY-SA 3.0"
+"23139642","2","","4700614","2014-04-17 17:27:24","","15","","<p>Not exactly what you asked for, but I found it's an alternative for the same problem.
+Make the legend semi-transparant, like so:
+<img src=""https://i.stack.imgur.com/foCZw.png"" alt=""matplotlib plot with semi transparent legend and semitransparent text box""></p>
+
+<p>Do this with:</p>
+
+<pre><code>fig = pylab.figure()
+ax = fig.add_subplot(111)
+ax.plot(x,y,label=label,color=color)
+# Make the legend transparent:
+ax.legend(loc=2,fontsize=10,fancybox=True).get_frame().set_alpha(0.5)
+# Make a transparent text box
+ax.text(0.02,0.02,yourstring, verticalalignment='bottom',
+                     horizontalalignment='left',
+                     fontsize=10,
+                     bbox={'facecolor':'white', 'alpha':0.6, 'pad':10},
+                     transform=self.ax.transAxes)
+</code></pre>
+","546465","","","","","2014-04-17 17:27:24","","","","0","","","","CC BY-SA 3.0"
+"24544116","2","","4700614","2014-07-03 02:43:20","","168","","<p>Just call <code>legend()</code> call after the <code>plot()</code> call like this:</p>
+
+<pre><code># matplotlib
+plt.plot(...)
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+# Pandas
+df.myCol.plot().legend(loc='center left', bbox_to_anchor=(1, 0.5))
+</code></pre>
+
+<p>Results would look something like this:</p>
+
+<p><img src=""https://i.stack.imgur.com/5fgie.png"" alt=""enter image description here""></p>
+","207661","","207661","","2018-10-16 03:01:43","2018-10-16 03:01:43","","","","3","","","","CC BY-SA 4.0"
+"25344713","2","","4700614","2014-08-16 22:49:37","","83","","<p>Short answer: you can use <code>bbox_to_anchor</code> + <code>bbox_extra_artists</code> + <code>bbox_inches='tight'</code>.</p>
+
+<hr>
+
+<p>Longer answer:
+You can use <code>bbox_to_anchor</code> to manually specify the location of the legend box, as some other people have pointed out in the answers. </p>
+
+<p>However, the usual issue is that the legend box is cropped, e.g.:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+# data 
+all_x = [10,20,30]
+all_y = [[1,3], [1.5,2.9],[3,2]]
+
+# Plot
+fig = plt.figure(1)
+ax = fig.add_subplot(111)
+ax.plot(all_x, all_y)
+
+# Add legend, title and axis labels
+lgd = ax.legend( [ 'Lag ' + str(lag) for lag in all_x], loc='center right', bbox_to_anchor=(1.3, 0.5))
+ax.set_title('Title')
+ax.set_xlabel('x label')
+ax.set_ylabel('y label')
+
+fig.savefig('image_output.png', dpi=300, format='png')
+</code></pre>
+
+<p><img src=""https://i.stack.imgur.com/DWe9y.png"" alt=""enter image description here""></p>
+
+<p>In order to prevent the legend box from getting cropped, when you save the figure you can use the parameters <code>bbox_extra_artists</code> and <code>bbox_inches</code> to ask <code>savefig</code> to include cropped elements in the saved image:</p>
+
+<p><code>fig.savefig('image_output.png', bbox_extra_artists=(lgd,), bbox_inches='tight')</code></p>
+
+<p>Example (I only changed the last line to add 2 parameters to <code>fig.savefig()</code>):</p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+# data 
+all_x = [10,20,30]
+all_y = [[1,3], [1.5,2.9],[3,2]]
+
+# Plot
+fig = plt.figure(1)
+ax = fig.add_subplot(111)
+ax.plot(all_x, all_y)
+
+# Add legend, title and axis labels
+lgd = ax.legend( [ 'Lag ' + str(lag) for lag in all_x], loc='center right', bbox_to_anchor=(1.3, 0.5))
+ax.set_title('Title')
+ax.set_xlabel('x label')
+ax.set_ylabel('y label')    
+
+fig.savefig('image_output.png', dpi=300, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+</code></pre>
+
+<p><img src=""https://i.stack.imgur.com/xGq1Y.png"" alt=""enter image description here""></p>
+
+<p>I wish that matplotlib would natively allow outside location for the legend box as <a href=""http://www.mathworks.com/help/matlab/ref/legend.html"" rel=""noreferrer"">Matlab does</a>:</p>
+
+<pre><code>figure
+x = 0:.2:12;
+plot(x,besselj(1,x),x,besselj(2,x),x,besselj(3,x));
+hleg = legend('First','Second','Third',...
+              'Location','NorthEastOutside')
+% Make the text of the legend italic and color it brown
+set(hleg,'FontAngle','italic','TextColor',[.3,.2,.1])
+</code></pre>
+
+<p><img src=""https://i.stack.imgur.com/bUGFR.png"" alt=""enter image description here""></p>
+","395857","","395857","","2014-08-16 22:55:45","2014-08-16 22:55:45","","","","4","","","","CC BY-SA 3.0"
+"27355247","2","","4700614","2014-12-08 09:46:40","","69","","<p>In addition to all the excellent answers here, newer versions of <code>matplotlib</code> and <code>pylab</code> can <strong>automatically determine where to put the legend without interfering with the plots</strong>, if possible.</p>
+
+<pre><code>pylab.legend(loc='best')
+</code></pre>
+
+<p>This will automatically place the legend away from the data if possible!
+<img src=""https://i.stack.imgur.com/NDq48.png"" alt=""Compare the use of loc=&#39;best&#39;""></p>
+
+<p>However, if there is no place to put the legend without overlapping the data, then you'll want to try one of the other answers; using <code>loc=""best""</code> will never put the legend <em>outside</em> of the plot.</p>
+","343302","","470844","","2019-03-04 23:49:33","2019-03-04 23:49:33","","","","5","","","","CC BY-SA 4.0"
+"42805773","2","","4700614","2017-03-15 09:31:50","","7","","<p>don't know if you already sorted out your issue...probably yes, but...
+I simply used the string 'outside' for the location, like in matlab.
+I imported pylab from matplotlib.
+see the code as follow:</p>
+
+<pre><code>from matplotlib as plt
+from matplotlib.font_manager import FontProperties
+t = A[:,0]
+sensors = A[:,index_lst]
+
+for i in range(sensors.shape[1]):
+    plt.plot(t,sensors[:,i])
+
+plt.xlabel('s')
+plt.ylabel('°C')
+lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5),fancybox = True, shadow = True)
+</code></pre>
+
+<p><a href=""https://i.stack.imgur.com/dNQCa.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/dNQCa.png"" alt=""enter image description here""></a></p>
+","7713970","","2869616","","2020-06-18 06:02:16","2020-06-18 06:02:16","","","","2","","","","CC BY-SA 4.0"
+"43439132","2","","4700614","2017-04-16 16:04:28","","896","","<h2>Placing the legend (<code>bbox_to_anchor</code>)</h2>
+<p>A legend is positioned inside the bounding box of the axes using the <code>loc</code> argument to <a href=""http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.legend"" rel=""noreferrer""><code>plt.legend</code></a>.<br />
+E.g. <code>loc=&quot;upper right&quot;</code> places the legend in the upper right corner of the bounding box, which by default extents from <code>(0,0)</code> to <code>(1,1)</code> in axes coordinates (or in bounding box notation <code>(x0,y0, width, height)=(0,0,1,1)</code>).</p>
+<p>To place the legend outside of the axes bounding box, one may specify a tuple <code>(x0,y0)</code> of axes coordinates of the lower left corner of the legend.</p>
+<pre><code>plt.legend(loc=(1.04,0))
+</code></pre>
+<p>However, a more versatile approach would be to manually specify the bounding box into which the legend should be placed, using the <strong><code>bbox_to_anchor</code></strong> argument. One can restrict oneself to supply only the <code>(x0,y0)</code> part of the bbox. This creates a zero span box, out of which the legend will expand in the direction given by the <code>loc</code> argument. E.g.</p>
+<p><strong><pre>plt.legend(bbox_to_anchor=(1.04,1), loc=&quot;upper left&quot;)</pre></strong></p>
+<p>places the legend outside the axes, such that the upper left corner of the legend is at position <code>(1.04,1)</code> in axes coordinates.</p>
+<p>Further examples are given below, where additionally the interplay between different arguments like <code>mode</code> and <code>ncols</code> are shown.</p>
+<p><a href=""https://i.stack.imgur.com/OIMyM.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/OIMyM.png"" alt=""enter image description here"" /></a></p>
+<pre><code>l1 = plt.legend(bbox_to_anchor=(1.04,1), borderaxespad=0)
+l2 = plt.legend(bbox_to_anchor=(1.04,0), loc=&quot;lower left&quot;, borderaxespad=0)
+l3 = plt.legend(bbox_to_anchor=(1.04,0.5), loc=&quot;center left&quot;, borderaxespad=0)
+l4 = plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc=&quot;lower left&quot;,
+                mode=&quot;expand&quot;, borderaxespad=0, ncol=3)
+l5 = plt.legend(bbox_to_anchor=(1,0), loc=&quot;lower right&quot;, 
+                bbox_transform=fig.transFigure, ncol=3)
+l6 = plt.legend(bbox_to_anchor=(0.4,0.8), loc=&quot;upper right&quot;)
+</code></pre>
+<p>Details about how to interpret the 4-tuple argument to <code>bbox_to_anchor</code>, as in <code>l4</code>, can be found in <a href=""https://stackoverflow.com/questions/39803385/what-does-a-4-element-tuple-argument-for-bbox-to-anchor-mean-in-matplotlib"">this question</a>. The <code>mode=&quot;expand&quot;</code> expands the legend horizontally inside the bounding box given by the 4-tuple. For a vertically expanded legend, see <a href=""https://stackoverflow.com/questions/46710546/matplotlib-expand-legend-vertically"">this question</a>.</p>
+<p>Sometimes it may be useful to specify the bounding box in figure coordinates instead of axes coordinates. This is shown in the example <code>l5</code> from above, where the <code>bbox_transform</code> argument is used to put the legend in the lower left corner of the figure.</p>
+<h3>Postprocessing</h3>
+<p>Having placed the legend outside the axes often leads to the undesired situation that it is completely or partially outside the figure canvas.</p>
+<p>Solutions to this problem are:</p>
+<ul>
+<li><p><strong>Adjust the subplot parameters</strong><br />
+One can adjust the subplot parameters such, that the axes take less space inside the figure (and thereby leave more space to the legend) by using <a href=""http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.subplots_adjust"" rel=""noreferrer""><code>plt.subplots_adjust</code></a>. E.g.</p>
+<pre><code>  plt.subplots_adjust(right=0.7)
+</code></pre>
+</li>
+</ul>
+<p>leaves 30% space on the right-hand side of the figure, where one could place the legend.</p>
+<ul>
+<li><p><strong>Tight layout</strong><br />
+Using <a href=""http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.tight_layout"" rel=""noreferrer""><code>plt.tight_layout</code></a> Allows to automatically adjust the subplot parameters such that the elements in the figure sit tight against the figure edges. Unfortunately, the legend is not taken into account in this automatism, but we can supply a rectangle box that the whole subplots area (including labels) will fit into.</p>
+<pre><code>  plt.tight_layout(rect=[0,0,0.75,1])
+</code></pre>
+</li>
+<li><p><strong>Saving the figure with <code>bbox_inches = &quot;tight&quot;</code></strong><br />
+The argument <code>bbox_inches = &quot;tight&quot;</code> to <a href=""http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.savefig"" rel=""noreferrer""><code>plt.savefig</code></a> can be used to save the figure such that all artist on the canvas (including the legend) are fit into the saved area. If needed, the figure size is automatically adjusted.</p>
+<pre><code>  plt.savefig(&quot;output.png&quot;, bbox_inches=&quot;tight&quot;)
+</code></pre>
+</li>
+<li><p><strong>automatically adjusting the subplot params</strong><br />
+A way to automatically adjust the subplot position such that the legend fits inside the canvas <strong>without changing the figure size</strong> can be found in this answer: <a href=""https://stackoverflow.com/a/43001737/4124317"">Creating figure with exact size and no padding (and legend outside the axes)</a></p>
+</li>
+</ul>
+<p>Comparison between the cases discussed above:</p>
+<p><a href=""https://i.stack.imgur.com/zqKjY.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/zqKjY.png"" alt=""enter image description here"" /></a></p>
+<h2>Alternatives</h2>
+<p><strong>A figure legend</strong></p>
+<p>One may use a legend to the figure instead of the axes, <a href=""https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html#matplotlib.figure.Figure.legend"" rel=""noreferrer""><code>matplotlib.figure.Figure.legend</code></a>. This has become especially useful for matplotlib version &gt;=2.1, where no special arguments are needed</p>
+<pre><code>fig.legend(loc=7) 
+</code></pre>
+<p>to create a legend for all artists in the different axes of the figure. The legend is placed using the <code>loc</code> argument, similar to how it is placed inside an axes, but in reference to the whole figure - hence it will be outside the axes somewhat automatically. What remains is to adjust the subplots such that there is no overlap between the legend and the axes. Here the point <em>&quot;Adjust the subplot parameters&quot;</em>  from above will be helpful. An example:</p>
+<pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(0,2*np.pi)
+colors=[&quot;#7aa0c4&quot;,&quot;#ca82e1&quot; ,&quot;#8bcd50&quot;,&quot;#e18882&quot;]
+fig, axes = plt.subplots(ncols=2)
+for i in range(4):
+    axes[i//2].plot(x,np.sin(x+i), color=colors[i],label=&quot;y=sin(x+{})&quot;.format(i))
+
+fig.legend(loc=7)
+fig.tight_layout()
+fig.subplots_adjust(right=0.75)   
+plt.show()
+</code></pre>
+<p><a href=""https://i.stack.imgur.com/v1AU6.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/v1AU6.png"" alt=""enter image description here"" /></a></p>
+<p><strong>Legend inside dedicated subplot axes</strong></p>
+<p>An alternative to using <code>bbox_to_anchor</code> would be to place the legend in its dedicated subplot axes (<code>lax</code>).
+Since the legend subplot should be smaller than the plot, we may use <code>gridspec_kw={&quot;width_ratios&quot;:[4,1]}</code> at axes creation.
+We can hide the axes <code>lax.axis(&quot;off&quot;)</code> but still put a legend in. The legend handles and labels need to obtained from the real plot via <code>h,l = ax.get_legend_handles_labels()</code>, and can then be supplied to the legend in the <code>lax</code> subplot, <code>lax.legend(h,l)</code>. A complete example is below.</p>
+<pre><code>import matplotlib.pyplot as plt
+plt.rcParams[&quot;figure.figsize&quot;] = 6,2
+
+fig, (ax,lax) = plt.subplots(ncols=2, gridspec_kw={&quot;width_ratios&quot;:[4,1]})
+ax.plot(x,y, label=&quot;y=sin(x)&quot;)
+....
+
+h,l = ax.get_legend_handles_labels()
+lax.legend(h,l, borderaxespad=0)
+lax.axis(&quot;off&quot;)
+
+plt.tight_layout()
+plt.show()
+</code></pre>
+<p>This produces a plot, which is visually pretty similar to the plot from above:</p>
+<p><a href=""https://i.stack.imgur.com/4RrYb.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/4RrYb.png"" alt=""enter image description here"" /></a></p>
+<p>We could also use the first axes to place the legend, but use the <code>bbox_transform</code> of the legend axes,</p>
+<pre><code>ax.legend(bbox_to_anchor=(0,0,1,1), bbox_transform=lax.transAxes)
+lax.axis(&quot;off&quot;)
+</code></pre>
+<p>In this approach, we do not need to obtain the legend handles externally, but we need to specify the <code>bbox_to_anchor</code> argument.</p>
+<h3>Further reading and notes:</h3>
+<ul>
+<li>Consider the matplotlib <a href=""http://matplotlib.org/users/legend_guide.html"" rel=""noreferrer"">legend guide</a> with some examples of other stuff you want to do with legends.</li>
+<li>Some example code for placing legends for pie charts may directly be found in answer to this question: <a href=""https://stackoverflow.com/questions/43272206/python-legend-overlaps-with-the-pie-chart"">Python - Legend overlaps with the pie chart</a></li>
+<li>The <code>loc</code> argument can take numbers instead of strings, which make calls shorter, however, they are not very intuitively mapped to each other. Here is the mapping for reference:</li>
+</ul>
+<p><a href=""https://i.stack.imgur.com/jxecX.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/jxecX.png"" alt=""enter image description here"" /></a></p>
+","4124317","","1136018","","2020-11-12 22:44:26","2020-11-12 22:44:26","","","","1","","","","CC BY-SA 4.0"
+"61050261","2","","4700614","2020-04-05 22:16:21","","7","","<p>It's worth refreshing this question, as newer versions of Matplotlib have made it much easier to position the legend outside the plot. I produced this example with Matplotlib version <code>3.1.1</code>.</p>
+
+<p>Users can pass a 2-tuple of coordinates to the <code>loc</code> parameter to position the legend anywhere in the bounding box. The only gotcha is you need to run <code>plt.tight_layout()</code> to get matplotlib to recompute the plot dimensions so the legend is visible:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+plt.plot([0, 1], [0, 1], label=""Label 1"")
+plt.plot([0, 1], [0, 2], label='Label 2')
+
+plt.legend(loc=(1.05, 0.5))
+plt.tight_layout()
+</code></pre>
+
+<p>This leads to the following plot:</p>
+
+<p><a href=""https://i.stack.imgur.com/MpHTh.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/MpHTh.png"" alt=""plot with legend outside""></a></p>
+
+<p>References:</p>
+
+<ul>
+<li><a href=""https://matplotlib.org/api/_as_gen/matplotlib.pyplot.legend.html"" rel=""noreferrer"">https://matplotlib.org/api/_as_gen/matplotlib.pyplot.legend.html</a></li>
+<li><a href=""https://showmecode.info/matplotlib/legend/reposition-legend/"" rel=""noreferrer"">https://showmecode.info/matplotlib/legend/reposition-legend/</a> (personal site)</li>
+</ul>
+","13213140","","","","","2020-04-05 22:16:21","","","","0","","","","CC BY-SA 4.0"
+"9888817","2","","9622163","2012-03-27 11:36:31","","168","","<p>The solution is: </p>
+
+<pre><code>pylab.savefig('foo.png')
+</code></pre>
+","330067","","63550","","2014-10-19 07:37:52","2014-10-19 07:37:52","","","","0","","","","CC BY-SA 3.0"
+"9890599","2","","9622163","2012-03-27 13:35:44","","1553","","<p>While the question has been answered, I'd like to add some useful tips when using <a href=""https://matplotlib.org/api/_as_gen/matplotlib.pyplot.savefig.html#matplotlib.pyplot.savefig"" rel=""noreferrer"">matplotlib.pyplot.savefig</a>. The file format can be specified by the extension:</p>
+
+<pre><code>from matplotlib import pyplot as plt
+
+plt.savefig('foo.png')
+plt.savefig('foo.pdf')
+</code></pre>
+
+<p>Will give a rasterized or vectorized output respectively, both which could be useful. In addition, you'll find that <code>pylab</code> leaves a generous, often undesirable, whitespace around the image. Remove it with:</p>
+
+<pre><code>savefig('foo.png', bbox_inches='tight')
+</code></pre>
+","249341","","1717828","","2019-03-18 17:12:49","2019-03-18 17:12:49","","","","9","","","","CC BY-SA 4.0"
+"21464691","2","","9622163","2014-01-30 18:30:37","","52","","<p>If you don't like the concept of the ""current"" figure, do:</p>
+
+<pre><code>import matplotlib.image as mpimg
+
+img = mpimg.imread(""src.png"")
+mpimg.imsave(""out.png"", img)
+</code></pre>
+","506566","","63550","","2014-10-19 07:38:20","2014-10-19 07:38:20","","","","5","","","","CC BY-SA 3.0"
+"29931148","2","","9622163","2015-04-28 22:35:11","","223","","<p>As others have said, <code>plt.savefig()</code> or <code>fig1.savefig()</code> is indeed the way to save an image.</p>
+
+<p>However I've found that in certain cases <strong>the figure is always shown</strong>. (eg. with Spyder having <code>plt.ion()</code>: interactive mode = On.)  I work around this by forcing the closing of the figure window in my giant loop with <code>plt.close(figure_object)</code> (see <a href=""https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.close.html"" rel=""noreferrer"">documentation</a>), so I don't have a million open figures during the loop:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure &amp; 1 axis
+ax.plot([0,1,2], [10,20,3])
+fig.savefig('path/to/save/image/to.png')   # save the figure to file
+plt.close(fig)    # close the figure window
+</code></pre>
+
+<p>You should be able to re-open the figure later if needed to with <code>fig.show()</code> (didn't test myself).</p>
+","2453202","","2453202","","2019-09-30 17:22:40","2019-09-30 17:22:40","","","","5","","","","CC BY-SA 4.0"
+"31133453","2","","9622163","2015-06-30 08:38:37","","30","","<pre><code>import datetime
+import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
+
+# Create the PdfPages object to which we will save the pages:
+# The with statement makes sure that the PdfPages object is closed properly at
+# the end of the block, even if an Exception occurs.
+with PdfPages('multipage_pdf.pdf') as pdf:
+    plt.figure(figsize=(3, 3))
+    plt.plot(range(7), [3, 1, 4, 1, 5, 9, 2], 'r-o')
+    plt.title('Page One')
+    pdf.savefig()  # saves the current figure into a pdf page
+    plt.close()
+
+    plt.rc('text', usetex=True)
+    plt.figure(figsize=(8, 6))
+    x = np.arange(0, 5, 0.1)
+    plt.plot(x, np.sin(x), 'b-')
+    plt.title('Page Two')
+    pdf.savefig()
+    plt.close()
+
+    plt.rc('text', usetex=False)
+    fig = plt.figure(figsize=(4, 5))
+    plt.plot(x, x*x, 'ko')
+    plt.title('Page Three')
+    pdf.savefig(fig)  # or you can pass a Figure object to pdf.savefig
+    plt.close()
+
+    # We can also set the file's metadata via the PdfPages object:
+    d = pdf.infodict()
+    d['Title'] = 'Multipage PDF Example'
+    d['Author'] = u'Jouni K. Sepp\xe4nen'
+    d['Subject'] = 'How to create a multipage pdf file and set its metadata'
+    d['Keywords'] = 'PdfPages multipage keywords author title subject'
+    d['CreationDate'] = datetime.datetime(2009, 11, 13)
+    d['ModDate'] = datetime.datetime.today()
+</code></pre>
+","4911254","","","","","2015-06-30 08:38:37","","","","0","","","","CC BY-SA 3.0"
+"32287336","2","","9622163","2015-08-29 14:50:47","","13","","<p>If, like me, you use Spyder IDE, you have to disable the interactive mode with :</p>
+
+<p><code>plt.ioff()</code></p>
+
+<p>(this command is automatically launched with the scientific startup)</p>
+
+<p>If you want to enable it again, use :</p>
+
+<p><code>plt.ion()</code></p>
+","3464212","","","","","2015-08-29 14:50:47","","","","0","","","","CC BY-SA 3.0"
+"34583288","2","","9622163","2016-01-04 00:35:56","","93","","<p>Just found this link on the MatPlotLib documentation addressing exactly this issue:
+<a href=""http://matplotlib.org/faq/howto_faq.html#generate-images-without-having-a-window-appear"" rel=""noreferrer"">http://matplotlib.org/faq/howto_faq.html#generate-images-without-having-a-window-appear</a></p>
+
+<p>They say that the easiest way to prevent the figure from popping up is to use a non-interactive backend (eg. Agg), via <code>matplotib.use(&lt;backend&gt;)</code>, eg:</p>
+
+<pre><code>import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+plt.plot([1,2,3])
+plt.savefig('myfig')
+</code></pre>
+
+<p>I still personally prefer using <code>plt.close( fig )</code>, since then you have the option to hide certain figures (during a loop), but still display figures for post-loop data processing. It is probably slower than choosing a non-interactive backend though - would be interesting if someone tested that.</p>
+
+<p><strong>UPDATE</strong>: for Spyder, you usually can't set the backend in this way (Because Spyder usually loads matplotlib early, preventing you from using <code>matplotlib.use()</code>).</p>
+
+<p>Instead, use <code>plt.switch_backend('Agg')</code>, or Turn off ""<em>enable support</em>"" in the Spyder prefs and run the <code>matplotlib.use('Agg')</code> command yourself.</p>
+
+<p>From these two hints: <a href=""https://stackoverflow.com/questions/44086597/cant-use-matplotlib-useagg-graphs-always-show-on-the-screen"">one</a>, <a href=""https://stackoverflow.com/questions/53617655/anaconda-on-mac-cant-set-matplotlib-backend-to-agg/53623640#53623640"">two</a></p>
+","2453202","","2453202","","2018-12-09 02:23:42","2018-12-09 02:23:42","","","","3","","","","CC BY-SA 4.0"
+"36245528","2","","9622163","2016-03-27 08:49:37","","12","","<p>The Solution : </p>
+
+<pre><code>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.style.use('ggplot')
+ts = pd.Series(np.random.randn(1000), index=pd.date_range('1/1/2000', periods=1000))
+ts = ts.cumsum()
+plt.figure()
+ts.plot()
+plt.savefig(""foo.png"", bbox_inches='tight')
+</code></pre>
+
+<p>If you do want to display the image as well as saving the image use:</p>
+
+<pre><code>%matplotlib inline
+</code></pre>
+
+<p>after 
+<code>import matplotlib</code></p>
+","5143238","","5143238","","2016-03-27 08:59:31","2016-03-27 08:59:31","","","","0","","","","CC BY-SA 3.0"
+"36427934","2","","9622163","2016-04-05 13:34:31","","25","","<p>I used the following:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+p1 = plt.plot(dates, temp, 'r-', label=""Temperature (celsius)"")  
+p2 = plt.plot(dates, psal, 'b-', label=""Salinity (psu)"")  
+plt.legend(loc='upper center', numpoints=1, bbox_to_anchor=(0.5, -0.05),        ncol=2, fancybox=True, shadow=True)
+
+plt.savefig('data.png')  
+plt.show()  
+f.close()
+plt.close()
+</code></pre>
+
+<p>I found very important to use plt.show after saving the figure, otherwise it won't work.<a href=""http://i.stack.imgur.com/2bUFL.png"" rel=""noreferrer"">figure exported in png</a></p>
+","6050496","","6050496","","2016-04-05 13:58:11","2016-04-05 13:58:11","","","","1","","","","CC BY-SA 3.0"
+"37460048","2","","9622163","2016-05-26 11:48:34","","30","","<p>The other answers are correct.  However, I sometimes find that I want to open the figure <em>object</em> later.  For example, I might want to change the label sizes, add a grid, or do other processing.  In a perfect world, I would simply rerun the code generating the plot, and adapt the settings.  Alas, the world is not perfect.  Therefore, in addition to saving to PDF or PNG, I add:</p>
+
+<pre><code>with open('some_file.pkl', ""wb"") as fp:
+    pickle.dump(fig, fp, protocol=4)
+</code></pre>
+
+<p>Like this, I can later load the figure object and manipulate the settings as I please.</p>
+
+<p>I also write out the stack with the source-code and <code>locals()</code> dictionary for each function/method in the stack, so that I can later tell exactly what generated the figure.</p>
+
+<p>NB: Be careful, as sometimes this method generates huge files.</p>
+","974555","","974555","","2017-02-22 14:14:35","2017-02-22 14:14:35","","","","2","","","","CC BY-SA 3.0"
+"39987599","2","","9622163","2016-10-11 22:12:15","","28","","<p>After using the plot() and other functions to create the content you want, you could use a clause like this to select between plotting to the screen or to file:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+fig = plt.figure(figsize=(4, 5))       # size in inches
+# use plot(), etc. to create your plot.
+
+# Pick one of the following lines to uncomment
+# save_file = None
+# save_file = os.path.join(your_directory, your_file_name)  
+
+if save_file:
+    plt.savefig(save_file)
+    plt.close(fig)
+else:
+    plt.show()
+</code></pre>
+","6496320","","6496320","","2019-01-14 16:21:09","2019-01-14 16:21:09","","","","1","","","","CC BY-SA 4.0"
+"46385142","2","","9622163","2017-09-23 23:20:03","","14","","<p>You can either do: </p>
+
+<pre><code>plt.show(hold=False)
+plt.savefig('name.pdf')
+</code></pre>
+
+<p>and remember to let savefig finish before closing the GUI plot. This way you can see the image beforehand. </p>
+
+<p>Alternatively, you can look at it with <code>plt.show()</code>
+Then close the GUI and run the script again, but this time replace <code>plt.show()</code> with <code>plt.savefig()</code>. </p>
+
+<p>Alternatively, you can use </p>
+
+<pre><code>fig, ax = plt.figure(nrows=1, ncols=1)
+plt.plot(...)
+plt.show()
+fig.savefig('out.pdf')
+</code></pre>
+","3799542","","","","","2017-09-23 23:20:03","","","","1","","","","CC BY-SA 3.0"
+"51439601","2","","9622163","2018-07-20 09:38:00","","10","","<p>According to question <a href=""https://stackoverflow.com/q/9012487/6329006"">Matplotlib (pyplot) savefig outputs blank image</a>.</p>
+
+<p>One thing should note: if you use <code>plt.show</code> and it should after <code>plt.savefig</code>, or you will give a blank image.</p>
+
+<p>A detailed example:</p>
+
+<pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+
+def draw_result(lst_iter, lst_loss, lst_acc, title):
+    plt.plot(lst_iter, lst_loss, '-b', label='loss')
+    plt.plot(lst_iter, lst_acc, '-r', label='accuracy')
+
+    plt.xlabel(""n iteration"")
+    plt.legend(loc='upper left')
+    plt.title(title)
+    plt.savefig(title+"".png"")  # should before plt.show method
+
+    plt.show()
+
+
+def test_draw():
+    lst_iter = range(100)
+    lst_loss = [0.01 * i + 0.01 * i ** 2 for i in xrange(100)]
+    # lst_loss = np.random.randn(1, 100).reshape((100, ))
+    lst_acc = [0.01 * i - 0.01 * i ** 2 for i in xrange(100)]
+    # lst_acc = np.random.randn(1, 100).reshape((100, ))
+    draw_result(lst_iter, lst_loss, lst_acc, ""sgd_method"")
+
+
+if __name__ == '__main__':
+    test_draw()
+</code></pre>
+
+<p><a href=""https://i.stack.imgur.com/zWZls.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/zWZls.png"" alt=""enter image description here""></a></p>
+","6329006","","","","","2018-07-20 09:38:00","","","","0","","","","CC BY-SA 4.0"
+"53355046","2","","9622163","2018-11-17 20:01:25","","6","","<pre><code>import matplotlib.pyplot as plt
+plt.savefig(""image.png"")
+</code></pre>
+
+<p>In Jupyter Notebook you have to remove <code>plt.show()</code> and add <code>plt.savefig()</code>, together with the rest of the plt-code in one cell.
+The image will still show up in your notebook.</p>
+","2326672","","1714692","","2019-01-07 11:06:28","2019-01-07 11:06:28","","","","0","","","","CC BY-SA 4.0"
+"61725305","2","","9622163","2020-05-11 08:24:11","","6","","<p>When using <code>matplotlib.pyplot</code>, you must first save your plot and then close it using these 2 lines:</p>
+
+<pre><code>fig.savefig('plot.png') # save the plot, place the path you want to save the figure in quotation
+plt.close(fig) # close the figure window
+</code></pre>
+","","user11733125","","","","2020-05-11 08:24:11","","","","0","","","","CC BY-SA 4.0"
+"12444777","2","","12444716","2012-09-16 06:07:44","","866","","<p>Functions dealing with text like <code>label</code>, <code>title</code>, etc. accept parameters same as <a href=""http://matplotlib.org/users/text_props.html"" rel=""noreferrer""><code>matplotlib.text.Text</code></a>. For the font size you can use <code>size/fontsize</code>:</p>
+
+<pre><code>from matplotlib import pyplot as plt    
+
+fig = plt.figure()
+plt.plot(data)
+fig.suptitle('test title', fontsize=20)
+plt.xlabel('xlabel', fontsize=18)
+plt.ylabel('ylabel', fontsize=16)
+fig.savefig('test.jpg')
+</code></pre>
+
+<p>For globally setting <code>title</code> and <code>label</code> sizes, <a href=""http://matplotlib.org/users/customizing.html"" rel=""noreferrer""><code>mpl.rcParams</code></a> contains <code>axes.titlesize</code> and <code>axes.labelsize</code>. (From the page):</p>
+
+<pre><code>axes.titlesize      : large   # fontsize of the axes title
+axes.labelsize      : medium  # fontsize of the x any y labels
+</code></pre>
+
+<p>(As far as I can see, there is no way to set <code>x</code> and <code>y</code> label sizes separately.)</p>
+
+<p>And I see that <code>axes.titlesize</code> does not affect <code>suptitle</code>. I guess, you need to set that manually.</p>
+","843822","","4298200","","2019-12-10 19:30:47","2019-12-10 19:30:47","","","","9","","","","CC BY-SA 4.0"
+"38251497","2","","12444716","2016-07-07 17:13:01","","111","","<p>You can also do this globally via a rcParams dictionary:</p>
+
+<pre><code>import matplotlib.pylab as pylab
+params = {'legend.fontsize': 'x-large',
+          'figure.figsize': (15, 5),
+         'axes.labelsize': 'x-large',
+         'axes.titlesize':'x-large',
+         'xtick.labelsize':'x-large',
+         'ytick.labelsize':'x-large'}
+pylab.rcParams.update(params)
+</code></pre>
+","4303016","","","","","2016-07-07 17:13:01","","","","5","","","","CC BY-SA 3.0"
+"46651121","2","","12444716","2017-10-09 16:35:05","","81","","<p>If you're more used to using <code>ax</code> objects to do your plotting, you might find the <code>ax.xaxis.label.set_size()</code> easier to remember, or at least easier to find using tab in an ipython terminal. It seems to need a redraw operation after to see the effect. For example:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+# set up a plot with dummy data
+fig, ax = plt.subplots()
+x = [0, 1, 2]
+y = [0, 3, 9]
+ax.plot(x,y)
+
+# title and labels, setting initial sizes
+fig.suptitle('test title', fontsize=12)
+ax.set_xlabel('xlabel', fontsize=10)
+ax.set_ylabel('ylabel', fontsize='medium')   # relative to plt.rcParams['font.size']
+
+# setting label sizes after creation
+ax.xaxis.label.set_size(20)
+plt.draw()
+</code></pre>
+
+<p>I don't know of a similar way to set the suptitle size after it's created.</p>
+","1329892","","1329892","","2018-06-15 18:27:36","2018-06-15 18:27:36","","","","4","","","","CC BY-SA 4.0"
+"53745066","2","","12444716","2018-12-12 14:20:24","","26","","<p>To only modify the title's font (and not the font of the axis) I used this:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+fig = plt.Figure()
+ax = fig.add_subplot(111)
+ax.set_title('My Title', fontdict={'fontsize': 8, 'fontweight': 'medium'})
+</code></pre>
+
+<p>The fontdict accepts all kwargs from <a href=""https://matplotlib.org/api/text_api.html#matplotlib.text.Text"" rel=""noreferrer"">matplotlib.text.Text</a>.</p>
+","3108856","","2289509","","2020-02-24 23:27:47","2020-02-24 23:27:47","","","","0","","","","CC BY-SA 4.0"
+"59169442","2","","12444716","2019-12-04 05:25:29","","16","","<blockquote>
+  <p>Per <a href=""https://matplotlib.org/faq/usage_faq.html#matplotlib-pyplot-and-pylab-how-are-they-related"" rel=""noreferrer"">the official guide</a>, use of <code>pylab</code> is no longer recommended. <code>matplotlib.pyplot</code> should be used directly instead. </p>
+</blockquote>
+
+<p>Globally setting font sizes via <code>rcParams</code> should be done with </p>
+
+<pre class=""lang-py prettyprint-override""><code>import matplotlib.pyplot as plt
+plt.rcParams['axes.labelsize'] = 16
+plt.rcParams['axes.titlesize'] = 16
+
+# or
+
+params = {'axes.labelsize': 16,
+          'axes.titlesize': 16}
+plt.rcParams.update(params)
+
+# or
+
+import matplotlib as mpl
+mpl.rc('axes', labelsize=16, titlesize=16)
+
+# or 
+
+axes = {'labelsize': 16,
+        'titlesize': 16}
+mpl.rc('axes', **axes)
+</code></pre>
+
+<p>The defaults can be restored using</p>
+
+<pre class=""lang-py prettyprint-override""><code>plt.rcParams.update(plt.rcParamsDefault)
+</code></pre>
+
+<p>You can also do this by creating a <a href=""https://matplotlib.org/3.1.1/tutorials/introductory/customizing.html#using-style-sheets"" rel=""noreferrer"">style sheet</a> in the <code>stylelib</code> directory under the <a href=""https://matplotlib.org/3.1.1/faq/troubleshooting_faq.html#matplotlib-configuration-and-cache-directory-locations"" rel=""noreferrer"">matplotlib configuration directory</a> (you can get your configuration directory from <code>matplotlib.get_configdir()</code>). The style sheet format is</p>
+
+<pre class=""lang-none prettyprint-override""><code>axes.labelsize: 16
+axes.titlesize: 16
+</code></pre>
+
+<p>If you have a style sheet at <code>/path/to/mpl_configdir/stylelib/mystyle.mplstyle</code> then you can use it via </p>
+
+<pre class=""lang-py prettyprint-override""><code>plt.style.use('mystyle')
+
+# or, for a single section
+
+with plt.style.context('mystyle'):
+    # ...
+</code></pre>
+
+<p>You can also create (or modify) a <a href=""https://matplotlib.org/3.1.1/tutorials/introductory/customizing.html#the-matplotlibrc-file"" rel=""noreferrer"">matplotlibrc file</a> which shares the format</p>
+
+<pre class=""lang-none prettyprint-override""><code>axes.labelsize = 16
+axes.titlesize = 16
+</code></pre>
+
+<p>Depending on which matplotlibrc file you modify these changes will be used for only the current working directory, for all working directories which do <strong>not</strong> have a matplotlibrc file, or for all working directories which do <strong>not</strong> have a matplotlibrc file and where no other matplotlibrc file has been specified. See <a href=""https://matplotlib.org/3.1.1/tutorials/introductory/customizing.html#the-matplotlibrc-file"" rel=""noreferrer"">this section</a> of the customizing matplotlib page for more details. </p>
+
+<p>A complete list of the <code>rcParams</code> keys can be retrieved via <code>plt.rcParams.keys()</code>, but for adjusting font sizes you have (italics quoted from <a href=""https://matplotlib.org/3.1.1/tutorials/introductory/customizing.html#a-sample-matplotlibrc-file"" rel=""noreferrer"">here</a>)</p>
+
+<ul>
+<li><code>axes.labelsize</code> - <em>Fontsize of the x and y labels</em></li>
+<li><code>axes.titlesize</code> - <em>Fontsize of the axes title</em></li>
+<li><code>figure.titlesize</code> - <em>Size of the figure title (<code>Figure.suptitle()</code>)</em></li>
+<li><code>xtick.labelsize</code> - <em>Fontsize of the tick labels</em></li>
+<li><code>ytick.labelsize</code> - <em>Fontsize of the tick labels</em></li>
+<li><code>legend.fontsize</code> - Fontsize for legends (<code>plt.legend()</code>, <code>fig.legend()</code>)</li>
+<li><code>legend.title_fontsize</code> - Fontsize for legend titles, <em><code>None</code> sets to the same as the default axes.</em> See <a href=""https://stackoverflow.com/questions/12402561/how-to-set-font-size-of-matplotlib-axis-legend/17093475#17093475"">this answer</a> for usage example.</li>
+</ul>
+
+<p>all of which accept string sizes <code>{'xx-small', 'x-small', 'smaller', 'small', 'medium', 'large', 'larger', 'x-large', 'xxlarge'}</code> or a <code>float</code> in <code>pt</code>. The string sizes are defined relative to the default font size which is specified by</p>
+
+<ul>
+<li><code>font.size</code> - <em>the default font size for text, given in pts. 10 pt is the standard value</em></li>
+</ul>
+
+<p>Additionally, the weight can be specified (though only for the default it appears) by</p>
+
+<ul>
+<li><code>font.weight</code> - The default weight of the font used by <code>text.Text</code>. Accepts <code>{100, 200, 300, 400, 500, 600, 700, 800, 900}</code> or <code>'normal'</code> (400), <code>'bold'</code> (700), <code>'lighter'</code>, and <code>'bolder'</code> (<em>relative with respect to current weight</em>).</li>
+</ul>
+","10659910","","10659910","","2020-05-16 01:46:31","2020-05-16 01:46:31","","","","0","","","","CC BY-SA 4.0"
+"12608937","2","","12608788","2012-09-26 19:24:08","","638","","<p>You could explicitly set where you want to tick marks with <code>plt.xticks</code>:</p>
+
+<pre><code>plt.xticks(np.arange(min(x), max(x)+1, 1.0))
+</code></pre>
+
+<hr>
+
+<p>For example,</p>
+
+<pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+x = [0,5,9,10,15]
+y = [0,1,2,3,4]
+plt.plot(x,y)
+plt.xticks(np.arange(min(x), max(x)+1, 1.0))
+plt.show()
+</code></pre>
+
+<hr>
+
+<p>(<code>np.arange</code> was used rather than Python's <code>range</code> function just in case <code>min(x)</code> and <code>max(x)</code> are floats instead of ints.) </p>
+
+<hr>
+
+<p>The <code>plt.plot</code> (or <code>ax.plot</code>) function will automatically set default <code>x</code> and <code>y</code> limits. If you wish to keep those limits, and just change the stepsize of the tick marks, then you could use <code>ax.get_xlim()</code> to discover what limits Matplotlib has already set. </p>
+
+<pre><code>start, end = ax.get_xlim()
+ax.xaxis.set_ticks(np.arange(start, end, stepsize))
+</code></pre>
+
+<p>The default tick formatter should do a decent job rounding the tick values to a sensible number of significant digits. However, if you wish to have more control over the format, you can define your own formatter. For example,</p>
+
+<pre><code>ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%0.1f'))
+</code></pre>
+
+<p>Here's a runnable example:</p>
+
+<pre><code>import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
+x = [0,5,9,10,15]
+y = [0,1,2,3,4]
+fig, ax = plt.subplots()
+ax.plot(x,y)
+start, end = ax.get_xlim()
+ax.xaxis.set_ticks(np.arange(start, end, 0.712123))
+ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%0.1f'))
+plt.show()
+</code></pre>
+","190597","","190597","","2013-10-01 17:50:35","2013-10-01 17:50:35","","","","8","","","","CC BY-SA 3.0"
+"19972993","2","","12608788","2013-11-14 08:38:42","","220","","<p>Another approach is to set the axis locator:</p>
+
+<pre><code>import matplotlib.ticker as plticker
+
+loc = plticker.MultipleLocator(base=1.0) # this locator puts ticks at regular intervals
+ax.xaxis.set_major_locator(loc)
+</code></pre>
+
+<p>There are several different types of locator depending upon your needs.</p>
+
+<p>Here is a full example:</p>
+
+<pre><code>import matplotlib.pyplot as plt
+import matplotlib.ticker as plticker
+
+x = [0,5,9,10,15]
+y = [0,1,2,3,4]
+fig, ax = plt.subplots()
+ax.plot(x,y)
+loc = plticker.MultipleLocator(base=1.0) # this locator puts ticks at regular intervals
+ax.xaxis.set_major_locator(loc)
+plt.show()
+</code></pre>
+","2991206","","2991206","","2019-05-15 07:08:59","2019-05-15 07:08:59","","","","5","","","","CC BY-SA 4.0"
+"27533166","2","","12608788","2014-12-17 19:18:45","","15","","<p>This is an old topic, but I stumble over this every now and then and made this function. It's very convenient:</p>
+
+<pre><code>import matplotlib.pyplot as pp
+import numpy as np
+
+def resadjust(ax, xres=None, yres=None):
+    """"""
+    Send in an axis and I fix the resolution as desired.
+    """"""
+
+    if xres:
+        start, stop = ax.get_xlim()
+        ticks = np.arange(start, stop + xres, xres)
+        ax.set_xticks(ticks)
+    if yres:
+        start, stop = ax.get_ylim()
+        ticks = np.arange(start, stop + yres, yres)
+        ax.set_yticks(ticks)
+</code></pre>
+
+<p>One caveat of controlling the ticks like this is that one does no longer enjoy the interactive automagic updating of max scale after an added line. Then do</p>
+
+<pre><code>gca().set_ylim(top=new_top) # for example
+</code></pre>
+
+<p>and run the resadjust function again.</p>
+","2107536","","2107536","","2015-04-02 10:04:17","2015-04-02 10:04:17","","","","0","","","","CC BY-SA 3.0"
+"28987863","2","","12608788","2015-03-11 13:26:52","","12","","<p>I developed an inelegant solution. Consider that we have the X axis and also a list of labels for each point in X.</p>
+
+Example:
+
+<pre><code>import matplotlib.pyplot as plt
+
+x = [0,1,2,3,4,5]
+y = [10,20,15,18,7,19]
+xlabels = ['jan','feb','mar','apr','may','jun']
+</code></pre>
+
+Let's say that I want to show ticks labels only for 'feb' and 'jun'
+
+<pre><code>xlabelsnew = []
+for i in xlabels:
+    if i not in ['feb','jun']:
+        i = ' '
+        xlabelsnew.append(i)
+    else:
+        xlabelsnew.append(i)
+</code></pre>
+
+Good, now we have a fake list of labels. First, we plotted the original version.
+
+<pre><code>plt.plot(x,y)
+plt.xticks(range(0,len(x)),xlabels,rotation=45)
+plt.show()
+</code></pre>
+
+Now, the modified version.
+
+<pre><code>plt.plot(x,y)
+plt.xticks(range(0,len(x)),xlabelsnew,rotation=45)
+plt.show()
+</code></pre>
+","4334413","","4334413","","2015-05-12 00:55:26","2015-05-12 00:55:26","","","","0","","","","CC BY-SA 3.0"
+"31997618","2","","12608788","2015-08-13 20:15:58","","37","","<p>This is a bit hacky, but by far the cleanest/easiest to understand example that I've found to do this. It's from an answer on SO here:</p>
+
+<p><a href=""https://stackoverflow.com/questions/20337664/cleanest-way-to-hide-every-nth-tick-label-in-matplotlib-colorbar"">Cleanest way to hide every nth tick label in matplotlib colorbar?</a></p>
+
+<pre><code>for label in ax.get_xticklabels()[::2]:
+    label.set_visible(False)
+</code></pre>
+
+<p>Then you can loop over the labels setting them to visible or not depending on the density you want.</p>
+
+<p>edit: note that sometimes matplotlib sets labels == <code>''</code>, so it might look like a label is not present, when in fact it is and just isn't displaying anything. To make sure you're looping through actual visible labels, you could try:</p>
+
+<pre><code>visible_labels = [lab for lab in ax.get_xticklabels() if lab.get_visible() is True and lab.get_text() != '']
+plt.setp(visible_labels[::2], visible=False)
+</code></pre>
+","1927102","","-1","","2017-05-23 12:34:53","2016-02-15 20:02:33","","","","3","","","","CC BY-SA 3.0"
+"36229671","2","","12608788","2016-03-25 23:24:37","","137","","<p>I like this solution (from the <a href=""https://www.safaribooksonline.com/library/view/matplotlib-plotting-cookbook/9781849513265/ch03s11.html"">Matplotlib Plotting Cookbook</a>):</p>
+
+<pre><code>import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
+x = [0,5,9,10,15]
+y = [0,1,2,3,4]
+
+tick_spacing = 1
+
+fig, ax = plt.subplots(1,1)
+ax.plot(x,y)
+ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+plt.show()
+</code></pre>
+
+<p>This solution give you explicit control of the tick spacing via the number given to <code>ticker.MultipleLocater()</code>, allows automatic limit determination, and is easy to read later.</p>
+","5128616","","","","","2016-03-25 23:24:37","","","","6","","","","CC BY-SA 3.0"
+"36646298","2","","12608788","2016-04-15 11:46:09","","106","","<p>In case anyone is interested in a general one-liner, simply get the current ticks and use it to set the new ticks by sampling every other tick.</p>
+
+<pre><code>ax.set_xticks(ax.get_xticks()[::2])
+</code></pre>
+","628228","","","","","2016-04-15 11:46:09","","","","5","","","","CC BY-SA 3.0"
+"58675407","2","","12608788","2019-11-02 21:21:01","","11","","<p>if you just want to set the spacing a simple one liner with minimal boilerplate:</p>
+
+<pre><code>plt.gca().xaxis.set_major_locator(plt.MultipleLocator(1))
+</code></pre>
+
+<p>also works easily for minor ticks:</p>
+
+<pre><code>plt.gca().xaxis.set_minor_locator(plt.MultipleLocator(1))
+</code></pre>
+
+<p>a bit of a mouthfull, but pretty compact</p>
+","9100636","","","","","2019-11-02 21:21:01","","","","0","","","","CC BY-SA 4.0"
+"19416267","2","","19410042","2013-10-17 00:28:47","","7","","<p>I found a workaround that is quite satisfactory.  I installed <a href=""http://docs.continuum.io/anaconda/index.html"" rel=""noreferrer"">Anaconda Python</a> and this now works out of the box for me.</p>
+","279194","","","","","2013-10-17 00:28:47","","","","0","","","","CC BY-SA 3.0"
+"24444083","2","","19410042","2014-06-27 04:40:55","","24","","<p>Use the <code>%pylab inline</code> magic command.</p>
+","616730","","10908375","","2020-01-25 13:55:59","2020-01-25 13:55:59","","","","1","","","","CC BY-SA 4.0"
+"24884342","2","","19410042","2014-07-22 10:01:24","","1158","","<p>I used <code>%matplotlib inline</code> in the first cell of the notebook and it works. I think you should try:</p>
+
+<pre><code>%matplotlib inline
+
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+</code></pre>
+
+<p>You can also always start all your IPython kernels in inline mode by default by setting the following config options in your config files:</p>
+
+<pre><code>c.IPKernelApp.matplotlib=&lt;CaselessStrEnum&gt;
+  Default: None
+  Choices: ['auto', 'gtk', 'gtk3', 'inline', 'nbagg', 'notebook', 'osx', 'qt', 'qt4', 'qt5', 'tk', 'wx']
+  Configure matplotlib for interactive use with the default matplotlib backend.
+</code></pre>
+","3864073","","137794","","2015-07-03 00:37:32","2015-07-03 00:37:32","","","","9","","","","CC BY-SA 3.0"
+"25351828","2","","19410042","2014-08-17 17:36:03","","11","","<p>I have to agree with foobarbecue (I don't have enough recs to be able to simply insert a comment under his post):</p>
+
+<p>It's now recommended that python notebook isn't started wit the argument <code>--pylab</code>, and according to Fernando Perez (creator of ipythonnb) <code>%matplotlib inline</code> should be the initial notebook command.</p>
+
+<p>See here: <a href=""http://nbviewer.ipython.org/github/ipython/ipython/blob/1.x/examples/notebooks/Part%203%20-%20Plotting%20with%20Matplotlib.ipynb"" rel=""noreferrer"">http://nbviewer.ipython.org/github/ipython/ipython/blob/1.x/examples/notebooks/Part%203%20-%20Plotting%20with%20Matplotlib.ipynb</a></p>
+","1240335","","2597135","","2016-01-25 21:54:29","2016-01-25 21:54:29","","","","0","","","","CC BY-SA 3.0"
+"29573210","2","","19410042","2015-04-11 02:01:06","","93","","<p><kbd>Ctrl</kbd> + <kbd>Enter</kbd></p>
+
+<pre><code>%matplotlib inline
+</code></pre>
+
+<p>Magic Line :D</p>
+
+<p>See: <a href=""http://nbviewer.ipython.org/github/ipython/ipython/blob/1.x/examples/notebooks/Part%203%20-%20Plotting%20with%20Matplotlib.ipynb"" rel=""noreferrer"">Plotting with Matplotlib</a>.</p>
+","479008","","1150683","","2019-02-18 19:37:32","2019-02-18 19:37:32","","","","1","","","","CC BY-SA 4.0"
+"32380490","2","","19410042","2015-09-03 16:03:07","","15","","<p>To make matplotlib inline by default in Jupyter (IPython 3):</p>
+
+<ol>
+<li><p>Edit file <code>~/.ipython/profile_default/ipython_config.py</code></p></li>
+<li><p>Add line <code>c.InteractiveShellApp.matplotlib = 'inline'</code></p></li>
+</ol>
+
+<p>Please note that adding this line to <code>ipython_notebook_config.py</code> would not work.
+Otherwise it works well with Jupyter and IPython 3.1.0</p>
+","1509797","","","","","2015-09-03 16:03:07","","","","0","","","","CC BY-SA 3.0"
+"34222212","2","","19410042","2015-12-11 11:13:17","","220","","<p>If your matplotlib version is above 1.4, it is also possible to use</p>
+
+<p>IPython 3.x and above</p>
+
+<pre><code>%matplotlib notebook
+
+import matplotlib.pyplot as plt
+</code></pre>
+
+<p>older versions</p>
+
+<pre><code>%matplotlib nbagg
+
+import matplotlib.pyplot as plt
+</code></pre>
+
+<p>Both will activate the <a href=""http://matplotlib.org/users/whats_new.html#the-nbagg-backend"" rel=""noreferrer"">nbagg backend</a>, which enables interactivity.</p>
+
+<p><a href=""https://i.stack.imgur.com/u9YvH.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/u9YvH.png"" alt=""Example plot with the nbagg backend""></a></p>
+","2786884","","2786884","","2016-04-22 07:27:29","2016-04-22 07:27:29","","","","8","","","","CC BY-SA 3.0"
+"21789908","2","","21784641","2014-02-14 21:34:36","","1331","","<p><strong>Problem Cause</strong></p>
+
+<p>In mac os image rendering back end of matplotlib (what-is-a-backend to render using the API of Cocoa by default). There are Qt4Agg and GTKAgg and as a back-end is not the default. Set the back end of macosx that is differ compare with other windows or linux os. </p>
+
+<p><strong>Solution</strong></p>
+
+<ul>
+<li>I assume you have installed the pip matplotlib, there is a directory in your root called <code>~/.matplotlib</code>. </li>
+<li>Create a file <code>~/.matplotlib/matplotlibrc</code> there and add the following code: <code>backend: TkAgg</code></li>
+</ul>
+
+<p>From this <a href=""http://matplotlib.org/examples/index.html"" rel=""noreferrer"">link</a> you can try different diagrams. </p>
+","1933675","","1933675","","2020-03-13 07:12:30","2020-03-13 07:12:30","","","","13","","","","CC BY-SA 4.0"
+"43028034","2","","43027980","2017-03-26 11:19:05","","335","","<p><code>%matplotlib</code> is a <a href=""http://ipython.readthedocs.io/en/stable/interactive/tutorial.html#magics-explained"" rel=""noreferrer""><em>magic function</em></a> in IPython. I'll quote the relevant documentation here for you to read for convenience:</p>
+
+<blockquote>
+  <p>IPython has a set of predefined ‘magic functions’ that you can call with a command line style syntax. There are two kinds of magics, line-oriented and cell-oriented. Line magics are prefixed with the % character and work much like OS command-line calls: they get as an argument the rest of the line, where arguments are passed without parentheses or quotes. Lines magics can return results and can be used in the right hand side of an assignment. Cell magics are prefixed with a double %%, and they are functions that get as an argument not only the rest of the line, but also the lines below it in a separate argument.</p>
+</blockquote>
+
+<p><code>%matplotlib inline</code> <a href=""http://ipython.readthedocs.io/en/stable/interactive/plotting.html"" rel=""noreferrer"">sets the backend of matplotlib to the 'inline' backend</a>:</p>
+
+<blockquote>
+  <p>With this backend, the output of plotting commands is displayed inline within frontends like the Jupyter notebook, directly below the code cell that produced it. The resulting plots will then also be stored in the notebook document.</p>
+</blockquote>
+
+<p>When using the 'inline' backend, your matplotlib graphs will be included in your notebook, next to the code. It may be worth also reading <em><a href=""https://stackoverflow.com/questions/19410042/how-to-make-ipython-notebook-matplotlib-plot-inline"">How to make IPython notebook matplotlib plot inline</a></em> for reference on how to use it in your code.</p>
+
+<p>If you want interactivity as well, you can use the <a href=""http://matplotlib.org/users/whats_new.html#the-nbagg-backend"" rel=""noreferrer"">nbagg backend</a> with <code>%matplotlib notebook</code> (in IPython 3.x),  as described <a href=""https://stackoverflow.com/questions/19410042/how-to-make-ipython-notebook-matplotlib-plot-inline"">here</a>.</p>
+","6650102","","-1","","2017-05-23 12:18:03","2017-03-26 11:19:05","","","","6","","","","CC BY-SA 3.0"
+"43028105","2","","43027980","2017-03-26 11:25:26","","84","","<p>Provided you are running IPython, the <code>%matplotlib inline</code> will make your plot outputs appear and be stored within the notebook. </p>
+
+<p>According to <a href=""http://ipython.readthedocs.io/en/stable/interactive/plotting.html"" rel=""noreferrer"">documentation</a></p>
+
+<blockquote>
+  <p>To set this up, before any plotting or import of <code>matplotlib</code> is
+  performed you must execute the <code>%matplotlib magic command</code>. This
+  performs the necessary behind-the-scenes setup for IPython to work
+  correctly hand in hand with <code>matplotlib</code>; it does not, however,
+  actually execute any Python import commands, that is, no names are
+  added to the namespace.</p>
+  
+  <p>A particularly interesting backend, provided by IPython, is the
+  <code>inline</code> backend. This is available only for the Jupyter Notebook and
+  the Jupyter QtConsole. It can be invoked as follows:</p>
+
+<pre><code>%matplotlib inline
+</code></pre>
+  
+  <p>With this backend, the output of plotting commands is displayed inline
+  within frontends like the Jupyter notebook, directly below the code
+  cell that produced it. The resulting plots will then also be stored in
+  the notebook document.</p>
+</blockquote>
+","5371236","","3001761","","2017-03-26 11:32:45","2017-03-26 11:32:45","","","","0","","","","CC BY-SA 3.0"
+"55266804","2","","43027980","2019-03-20 17:24:51","","36","","<p>If you want to add plots to your Jupyter notebook, then <code>%matplotlib inline</code> is a standard solution. And there are other magic commands will use <code>matplotlib</code> interactively within Jupyter.</p>
+
+<p><code>%matplotlib</code>: any <code>plt</code> plot command will now cause a figure window to open, and further commands can be run to update the plot. Some changes will not draw automatically, to force an update, use <code>plt.draw()</code></p>
+
+<p><code>%matplotlib notebook</code>: will lead to interactive plots embedded within the notebook, you can zoom and resize the figure</p>
+
+<p><code>%matplotlib inline</code>: only draw static images in the notebook</p>
+","9905745","","","","","2019-03-20 17:24:51","","","","0","","","","CC BY-SA 4.0"
+"58481041","2","","43027980","2019-10-21 06:44:23","","8","","<blockquote>
+  <p>Starting with IPython 5.0 and matplotlib 2.0 you can avoid the use of
+  IPython’s specific magic and use
+  <code>matplotlib.pyplot.ion()/matplotlib.pyplot.ioff()</code> which have the
+  advantages of working outside of IPython as well.</p>
+</blockquote>
+
+<p><a href=""https://ipython.readthedocs.io/en/stable/interactive/plotting.html"" rel=""noreferrer"">ipython docs</a></p>
+","2502999","","","","","2019-10-21 06:44:23","","","","1","","","","CC BY-SA 4.0"
+"59612389","2","","43027980","2020-01-06 12:46:14","","6","","<p>It just means that any graph which we are creating as a part of our code will appear in the same notebook and not in separate window which would happen if we have not used this magic statement.</p>
+","5471334","","","","","2020-01-06 12:46:14","","","","0","","","","CC BY-SA 4.0"
+"61289063","2","","43027980","2020-04-18 12:28:05","","17","","<p>To explain it clear: </p>
+
+<p>If you don't like it like this:</p>
+
+<p><a href=""https://i.stack.imgur.com/vfLgd.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/vfLgd.png"" alt=""enter image description here""></a></p>
+
+<p>add <code>%matplotlib inline</code></p>
+
+<p><a href=""https://i.stack.imgur.com/9kRLw.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/9kRLw.png"" alt=""enter image description here""></a></p>
+
+<p>and there you have it in your jupyter notebook.</p>
+","5884955","","","","","2020-04-18 12:28:05","","","","4","","","","CC BY-SA 4.0"

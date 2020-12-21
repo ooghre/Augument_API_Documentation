@@ -1,0 +1,25 @@
+WITH T1 AS (
+    SELECT TOP 10
+         *
+  FROM Posts AS p2
+  WHERE p2.PostTypeId = 1
+  AND p2.Tags LIKE '%<python>%'
+  AND p2.Tags LIKE '%<numpy>%'
+  
+  
+  ORDER BY p2.Score DESC
+)
+
+SELECT *
+FROM Posts as p1
+
+WHERE exists (
+
+  SELECT * 
+  FROM T1 as p2
+  WHERE p2.id =p1.ParentId
+  AND p1.score > 5
+  
+  
+) 
+ORDER By p1.ParentId

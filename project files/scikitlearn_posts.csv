@@ -1,0 +1,1574 @@
+Id,PostTypeId,AcceptedAnswerId,ParentId,CreationDate,DeletionDate,Score,ViewCount,Body,OwnerUserId,OwnerDisplayName,LastEditorUserId,LastEditorDisplayName,LastEditDate,LastActivityDate,Title,Tags,AnswerCount,CommentCount,FavoriteCount,ClosedDate,CommunityOwnedDate,ContentLicense
+"5531148","2","","5529625","2011-04-03 17:17:02","","46","","<p>Unfortunately no: scikit-learn current implementation of k-means only uses Euclidean distances.</p>
+
+<p>It is not trivial to extend k-means to other distances and denis' answer above is not the correct way to implement k-means for other metrics.</p>
+","163740","","676634","","2019-05-29 21:24:59","2019-05-29 21:24:59","","","","1","","","","CC BY-SA 4.0"
+"5551499","2","","5529625","2011-04-05 12:05:28","","80","","<p>Here's a small kmeans that uses any of the 20-odd distances in
+<a href=""http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html#scipy.spatial.distance.cdist"" rel=""noreferrer"">scipy.spatial.distance</a>, or a user function.<br>
+Comments would be welcome (this has had only one user so far, not enough);
+in particular, what are your N, dim, k, metric ?</p>
+
+<pre><code>#!/usr/bin/env python
+# kmeans.py using any of the 20-odd metrics in scipy.spatial.distance
+# kmeanssample 2 pass, first sample sqrt(N)
+
+from __future__ import division
+import random
+import numpy as np
+from scipy.spatial.distance import cdist  # $scipy/spatial/distance.py
+    # http://docs.scipy.org/doc/scipy/reference/spatial.html
+from scipy.sparse import issparse  # $scipy/sparse/csr.py
+
+__date__ = ""2011-11-17 Nov denis""
+    # X sparse, any cdist metric: real app ?
+    # centres get dense rapidly, metrics in high dim hit distance whiteout
+    # vs unsupervised / semi-supervised svm
+
+#...............................................................................
+def kmeans( X, centres, delta=.001, maxiter=10, metric=""euclidean"", p=2, verbose=1 ):
+    """""" centres, Xtocentre, distances = kmeans( X, initial centres ... )
+    in:
+        X N x dim  may be sparse
+        centres k x dim: initial centres, e.g. random.sample( X, k )
+        delta: relative error, iterate until the average distance to centres
+            is within delta of the previous average distance
+        maxiter
+        metric: any of the 20-odd in scipy.spatial.distance
+            ""chebyshev"" = max, ""cityblock"" = L1, ""minkowski"" with p=
+            or a function( Xvec, centrevec ), e.g. Lqmetric below
+        p: for minkowski metric -- local mod cdist for 0 &lt; p &lt; 1 too
+        verbose: 0 silent, 2 prints running distances
+    out:
+        centres, k x dim
+        Xtocentre: each X -&gt; its nearest centre, ints N -&gt; k
+        distances, N
+    see also: kmeanssample below, class Kmeans below.
+    """"""
+    if not issparse(X):
+        X = np.asanyarray(X)  # ?
+    centres = centres.todense() if issparse(centres) \
+        else centres.copy()
+    N, dim = X.shape
+    k, cdim = centres.shape
+    if dim != cdim:
+        raise ValueError( ""kmeans: X %s and centres %s must have the same number of columns"" % (
+            X.shape, centres.shape ))
+    if verbose:
+        print ""kmeans: X %s  centres %s  delta=%.2g  maxiter=%d  metric=%s"" % (
+            X.shape, centres.shape, delta, maxiter, metric)
+    allx = np.arange(N)
+    prevdist = 0
+    for jiter in range( 1, maxiter+1 ):
+        D = cdist_sparse( X, centres, metric=metric, p=p )  # |X| x |centres|
+        xtoc = D.argmin(axis=1)  # X -&gt; nearest centre
+        distances = D[allx,xtoc]
+        avdist = distances.mean()  # median ?
+        if verbose &gt;= 2:
+            print ""kmeans: av |X - nearest centre| = %.4g"" % avdist
+        if (1 - delta) * prevdist &lt;= avdist &lt;= prevdist \
+        or jiter == maxiter:
+            break
+        prevdist = avdist
+        for jc in range(k):  # (1 pass in C)
+            c = np.where( xtoc == jc )[0]
+            if len(c) &gt; 0:
+                centres[jc] = X[c].mean( axis=0 )
+    if verbose:
+        print ""kmeans: %d iterations  cluster sizes:"" % jiter, np.bincount(xtoc)
+    if verbose &gt;= 2:
+        r50 = np.zeros(k)
+        r90 = np.zeros(k)
+        for j in range(k):
+            dist = distances[ xtoc == j ]
+            if len(dist) &gt; 0:
+                r50[j], r90[j] = np.percentile( dist, (50, 90) )
+        print ""kmeans: cluster 50 % radius"", r50.astype(int)
+        print ""kmeans: cluster 90 % radius"", r90.astype(int)
+            # scale L1 / dim, L2 / sqrt(dim) ?
+    return centres, xtoc, distances
+
+#...............................................................................
+def kmeanssample( X, k, nsample=0, **kwargs ):
+    """""" 2-pass kmeans, fast for large N:
+        1) kmeans a random sample of nsample ~ sqrt(N) from X
+        2) full kmeans, starting from those centres
+    """"""
+        # merge w kmeans ? mttiw
+        # v large N: sample N^1/2, N^1/2 of that
+        # seed like sklearn ?
+    N, dim = X.shape
+    if nsample == 0:
+        nsample = max( 2*np.sqrt(N), 10*k )
+    Xsample = randomsample( X, int(nsample) )
+    pass1centres = randomsample( X, int(k) )
+    samplecentres = kmeans( Xsample, pass1centres, **kwargs )[0]
+    return kmeans( X, samplecentres, **kwargs )
+
+def cdist_sparse( X, Y, **kwargs ):
+    """""" -&gt; |X| x |Y| cdist array, any cdist metric
+        X or Y may be sparse -- best csr
+    """"""
+        # todense row at a time, v slow if both v sparse
+    sxy = 2*issparse(X) + issparse(Y)
+    if sxy == 0:
+        return cdist( X, Y, **kwargs )
+    d = np.empty( (X.shape[0], Y.shape[0]), np.float64 )
+    if sxy == 2:
+        for j, x in enumerate(X):
+            d[j] = cdist( x.todense(), Y, **kwargs ) [0]
+    elif sxy == 1:
+        for k, y in enumerate(Y):
+            d[:,k] = cdist( X, y.todense(), **kwargs ) [0]
+    else:
+        for j, x in enumerate(X):
+            for k, y in enumerate(Y):
+                d[j,k] = cdist( x.todense(), y.todense(), **kwargs ) [0]
+    return d
+
+def randomsample( X, n ):
+    """""" random.sample of the rows of X
+        X may be sparse -- best csr
+    """"""
+    sampleix = random.sample( xrange( X.shape[0] ), int(n) )
+    return X[sampleix]
+
+def nearestcentres( X, centres, metric=""euclidean"", p=2 ):
+    """""" each X -&gt; nearest centre, any metric
+            euclidean2 (~ withinss) is more sensitive to outliers,
+            cityblock (manhattan, L1) less sensitive
+    """"""
+    D = cdist( X, centres, metric=metric, p=p )  # |X| x |centres|
+    return D.argmin(axis=1)
+
+def Lqmetric( x, y=None, q=.5 ):
+    # yes a metric, may increase weight of near matches; see ...
+    return (np.abs(x - y) ** q) .mean() if y is not None \
+        else (np.abs(x) ** q) .mean()
+
+#...............................................................................
+class Kmeans:
+    """""" km = Kmeans( X, k= or centres=, ... )
+        in: either initial centres= for kmeans
+            or k= [nsample=] for kmeanssample
+        out: km.centres, km.Xtocentre, km.distances
+        iterator:
+            for jcentre, J in km:
+                clustercentre = centres[jcentre]
+                J indexes e.g. X[J], classes[J]
+    """"""
+    def __init__( self, X, k=0, centres=None, nsample=0, **kwargs ):
+        self.X = X
+        if centres is None:
+            self.centres, self.Xtocentre, self.distances = kmeanssample(
+                X, k=k, nsample=nsample, **kwargs )
+        else:
+            self.centres, self.Xtocentre, self.distances = kmeans(
+                X, centres, **kwargs )
+
+    def __iter__(self):
+        for jc in range(len(self.centres)):
+            yield jc, (self.Xtocentre == jc)
+
+#...............................................................................
+if __name__ == ""__main__"":
+    import random
+    import sys
+    from time import time
+
+    N = 10000
+    dim = 10
+    ncluster = 10
+    kmsample = 100  # 0: random centres, &gt; 0: kmeanssample
+    kmdelta = .001
+    kmiter = 10
+    metric = ""cityblock""  # ""chebyshev"" = max, ""cityblock"" L1,  Lqmetric
+    seed = 1
+
+    exec( ""\n"".join( sys.argv[1:] ))  # run this.py N= ...
+    np.set_printoptions( 1, threshold=200, edgeitems=5, suppress=True )
+    np.random.seed(seed)
+    random.seed(seed)
+
+    print ""N %d  dim %d  ncluster %d  kmsample %d  metric %s"" % (
+        N, dim, ncluster, kmsample, metric)
+    X = np.random.exponential( size=(N,dim) )
+        # cf scikits-learn datasets/
+    t0 = time()
+    if kmsample &gt; 0:
+        centres, xtoc, dist = kmeanssample( X, ncluster, nsample=kmsample,
+            delta=kmdelta, maxiter=kmiter, metric=metric, verbose=2 )
+    else:
+        randomcentres = randomsample( X, ncluster )
+        centres, xtoc, dist = kmeans( X, randomcentres,
+            delta=kmdelta, maxiter=kmiter, metric=metric, verbose=2 )
+    print ""%.0f msec"" % ((time() - t0) * 1000)
+
+    # also ~/py/np/kmeans/test-kmeans.py
+</code></pre>
+
+<p>Some notes added 26mar 2012:</p>
+
+<p>1) for cosine distance, first normalize all the data vectors to |X| = 1; then</p>
+
+<pre><code>cosinedistance( X, Y ) = 1 - X . Y = Euclidean distance |X - Y|^2 / 2
+</code></pre>
+
+<p>is fast. For bit vectors, keep the norms separately from the vectors
+instead of expanding out to floats
+(although some programs may expand for you).
+For sparse vectors, say 1 % of N, X . Y should take time O( 2 % N ),
+space O(N); but I don't know which programs do that.</p>
+
+<p>2)
+<a href=""http://scikit-learn.org/stable/modules/clustering.html"" rel=""noreferrer"">Scikit-learn clustering</a>
+gives an excellent overview of k-means, mini-batch-k-means ...
+with code that works on scipy.sparse matrices.</p>
+
+<p>3) Always check cluster sizes after k-means.
+If you're expecting roughly equal-sized clusters, but they come out
+<code>[44 37  9  5  5] %</code> ... (sound of head-scratching).</p>
+","86643","","448357","","2018-03-02 13:49:47","2018-03-02 13:49:47","","","","18","","","","CC BY-SA 3.0"
+"9875395","2","","5529625","2012-03-26 15:52:44","","15","","<p>Yes you can use a difference metric function; however, by definition, the k-means clustering algorithm relies on the eucldiean distance from the mean of each cluster. </p>
+
+<p>You could use a different metric, so even though you are still calculating the mean you could use something like the mahalnobis distance. </p>
+","1253372","","","","","2012-03-26 15:52:44","","","","6","","","","CC BY-SA 3.0"
+"39442355","2","","5529625","2016-09-12 01:38:45","","27","","<p>Just use nltk instead where you can do this, e.g.</p>
+
+<pre><code>from nltk.cluster.kmeans import KMeansClusterer
+NUM_CLUSTERS = &lt;choose a value&gt;
+data = &lt;sparse matrix that you would normally give to scikit&gt;.toarray()
+
+kclusterer = KMeansClusterer(NUM_CLUSTERS, distance=nltk.cluster.util.cosine_distance, repeats=25)
+assigned_clusters = kclusterer.cluster(data, assign_clusters=True)
+</code></pre>
+","1854079","","","","","2016-09-12 01:38:45","","","","3","","","","CC BY-SA 3.0"
+"51727861","2","","5529625","2018-08-07 13:20:51","","7","","<p>There is <a href=""https://github.com/annoviko/pyclustering"" rel=""noreferrer"">pyclustering</a> which is python/C++ (so its fast!) and lets you specify a custom metric function</p>
+
+<pre><code>from pyclustering.cluster.kmeans import kmeans
+from pyclustering.utils.metric import type_metric, distance_metric
+
+user_function = lambda point1, point2: point1[0] + point2[0] + 2
+metric = distance_metric(type_metric.USER_DEFINED, func=user_function)
+
+# create K-Means algorithm with specific distance metric
+start_centers = [[4.7, 5.9], [5.7, 6.5]];
+kmeans_instance = kmeans(sample, start_centers, metric=metric)
+
+# run cluster analysis and obtain results
+kmeans_instance.process()
+clusters = kmeans_instance.get_clusters()
+</code></pre>
+
+<p>Actually, i haven't tested this code but cobbled it together from <a href=""https://github.com/annoviko/pyclustering/issues/417"" rel=""noreferrer"">a ticket</a> and <a href=""https://github.com/annoviko/pyclustering/blob/master/pyclustering/cluster/examples/kmeans_examples.py"" rel=""noreferrer"">example code</a>.</p>
+","196732","","196732","","2018-08-07 13:49:12","2018-08-07 13:49:12","","","","1","","","","CC BY-SA 4.0"
+"10593176","2","","10592605","2012-05-15 01:41:50","","209","","<p>Classifiers are just objects that can be pickled and dumped like any other. To continue your example:</p>
+<pre><code>import cPickle
+# save the classifier
+with open('my_dumped_classifier.pkl', 'wb') as fid:
+    cPickle.dump(gnb, fid)    
+
+# load it again
+with open('my_dumped_classifier.pkl', 'rb') as fid:
+    gnb_loaded = cPickle.load(fid)
+</code></pre>
+<p>Edit: if you are using a <a href=""https://stackoverflow.com/questions/33091376/python-what-is-exactly-sklearn-pipeline-pipeline"">sklearn Pipeline</a> in which you have custom transformers that cannot be serialized by pickle (nor by <a href=""https://stackoverflow.com/a/11169797/2476920"">joblib</a>), then using Neuraxle's <a href=""https://www.neuraxle.org/stable/step_saving_and_lifecycle.html#Saving-Example"" rel=""nofollow noreferrer"">custom ML Pipeline saving</a> is a solution where you can define your own custom <a href=""https://www.neuraxle.org/stable/step_saving_and_lifecycle.html#Custom-Saver-Example"" rel=""nofollow noreferrer"">step savers</a> on a per-step basis. The savers are called for each step if defined upon saving, and otherwise joblib is used as default for steps without a saver.</p>
+","1365759","","2476920","","2020-11-22 05:22:19","2020-11-22 05:22:19","","","","2","","","","CC BY-SA 4.0"
+"11169797","2","","10592605","2012-06-23 13:16:28","","218","","<p>You can also use <a href=""http://packages.python.org/joblib/generated/joblib.dump.html"" rel=""noreferrer"">joblib.dump</a> and <a href=""http://packages.python.org/joblib/generated/joblib.load.html"" rel=""noreferrer"">joblib.load</a> which is much more efficient at handling numerical arrays than the default python pickler.</p>
+
+<p>Joblib is included in scikit-learn:</p>
+
+<pre><code>&gt;&gt;&gt; import joblib
+&gt;&gt;&gt; from sklearn.datasets import load_digits
+&gt;&gt;&gt; from sklearn.linear_model import SGDClassifier
+
+&gt;&gt;&gt; digits = load_digits()
+&gt;&gt;&gt; clf = SGDClassifier().fit(digits.data, digits.target)
+&gt;&gt;&gt; clf.score(digits.data, digits.target)  # evaluate training error
+0.9526989426822482
+
+&gt;&gt;&gt; filename = '/tmp/digits_classifier.joblib.pkl'
+&gt;&gt;&gt; _ = joblib.dump(clf, filename, compress=9)
+
+&gt;&gt;&gt; clf2 = joblib.load(filename)
+&gt;&gt;&gt; clf2
+SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, learning_rate='optimal', loss='hinge', n_iter=5,
+       n_jobs=1, penalty='l2', power_t=0.5, rho=0.85, seed=0,
+       shuffle=False, verbose=0, warm_start=False)
+&gt;&gt;&gt; clf2.score(digits.data, digits.target)
+0.9526989426822482
+</code></pre>
+
+<p>Edit: in Python 3.8+ it's now possible to use pickle for efficient pickling of object with large numerical arrays as attributes if you use pickle protocol 5 (which is not the default).</p>
+","163740","","163740","","2020-05-06 16:01:30","2020-05-06 16:01:30","","","","7","","","","CC BY-SA 4.0"
+"32174359","2","","10592605","2015-08-24 04:17:11","","112","","<p>What you are looking for is called <strong>Model persistence</strong> in sklearn words and it is documented in <a href=""http://scikit-learn.org/stable/tutorial/basic/tutorial.html#model-persistence"">introduction</a> and in <a href=""http://scikit-learn.org/stable/modules/model_persistence.html"">model persistence</a> sections.</p>
+
+<p>So you have initialized your classifier and trained it for a long time with</p>
+
+<pre><code>clf = some.classifier()
+clf.fit(X, y)
+</code></pre>
+
+<p>After this you have two options:</p>
+
+<p><strong>1) Using Pickle</strong></p>
+
+<pre><code>import pickle
+# now you can save it to a file
+with open('filename.pkl', 'wb') as f:
+    pickle.dump(clf, f)
+
+# and later you can load it
+with open('filename.pkl', 'rb') as f:
+    clf = pickle.load(f)
+</code></pre>
+
+<p><strong>2) Using Joblib</strong></p>
+
+<pre><code>from sklearn.externals import joblib
+# now you can save it to a file
+joblib.dump(clf, 'filename.pkl') 
+# and later you can load it
+clf = joblib.load('filename.pkl')
+</code></pre>
+
+<p>One more time it is helpful to read the above-mentioned links </p>
+","1090562","","","","","2015-08-24 04:17:11","","","","0","","","","CC BY-SA 3.0"
+"40755484","2","","10592605","2016-11-23 03:24:22","","33","","<p>In many cases, particularly with text classification it is not enough just to store the classifier but you'll need to store the vectorizer as well so that you can vectorize your input in future.</p>
+
+<pre><code>import pickle
+with open('model.pkl', 'wb') as fout:
+  pickle.dump((vectorizer, clf), fout)
+</code></pre>
+
+<p>future use case:</p>
+
+<pre><code>with open('model.pkl', 'rb') as fin:
+  vectorizer, clf = pickle.load(fin)
+
+X_new = vectorizer.transform(new_samples)
+X_new_preds = clf.predict(X_new)
+</code></pre>
+
+<p>Before dumping the vectorizer, one can delete the stop_words_ property of vectorizer by:</p>
+
+<pre><code>vectorizer.stop_words_ = None
+</code></pre>
+
+<p>to make dumping more efficient.
+Also if your classifier parameters is sparse (as in most text classification examples) you can convert the parameters from dense to sparse which will make a huge difference in terms of memory consumption, loading and dumping. <a href=""http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn.linear_model.SGDClassifier.sparsify"" rel=""noreferrer"">Sparsify</a> the model by:</p>
+
+<pre><code>clf.sparsify()
+</code></pre>
+
+<p>Which will automatically work for <a href=""http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html"" rel=""noreferrer"">SGDClassifier</a> but in case you know your model is sparse (lots of zeros in clf.coef_) then you can manually convert clf.coef_ into a <a href=""https://docs.scipy.org/doc/scipy-0.18.1/reference/sparse.html"" rel=""noreferrer"">csr scipy sparse matrix</a> by:</p>
+
+<pre><code>clf.coef_ = scipy.sparse.csr_matrix(clf.coef_)
+</code></pre>
+
+<p>and then you can store it more efficiently.</p>
+","956730","","956730","","2016-11-23 03:30:03","2016-11-23 03:30:03","","","","1","","","","CC BY-SA 3.0"
+"17221808","2","","17197492","2013-06-20 19:08:39","","25","","<p>This is probably faster?:</p>
+
+<pre><code>n = len(predictions)
+rmse = np.linalg.norm(predictions - targets) / np.sqrt(n)
+</code></pre>
+","2288619","","2288619","","2016-01-29 06:12:59","2016-01-29 06:12:59","","","","0","","","","CC BY-SA 3.0"
+"18623635","2","","17197492","2013-09-04 20:56:57","","230","","<p><strong>sklearn &gt;= 0.22.0</strong></p>
+<p><code>sklearn.metrics</code> has a <code>mean_squared_error</code> function with a <code>squared</code> kwarg (defaults to <code>True</code>). Setting <code>squared</code> to <code>False</code> will return the RMSE.</p>
+<pre><code>from sklearn.metrics import mean_squared_error
+
+rms = mean_squared_error(y_actual, y_predicted, squared=False)
+</code></pre>
+<p><strong>sklearn &lt; 0.22.0</strong></p>
+<p><code>sklearn.metrics</code> has a <code>mean_squared_error</code> function. The RMSE is just the square root of whatever it returns.</p>
+<pre><code>from sklearn.metrics import mean_squared_error
+from math import sqrt
+
+rms = sqrt(mean_squared_error(y_actual, y_predicted))
+</code></pre>
+","2748493","","2748493","","2020-11-24 14:51:26","2020-11-24 14:51:26","","","","1","","","","CC BY-SA 4.0"
+"37861832","2","","17197492","2016-06-16 14:17:14","","138","","<h2>What is RMSE?  Also known as MSE, RMD, or RMS.  What problem does it solve?</h2>
+
+<p>If you understand RMSE: (Root mean squared error), MSE: (Mean Squared Error) RMD (Root mean squared deviation) and RMS: (Root Mean Squared), then asking for a library to calculate this for you is unnecessary over-engineering.  All these metrics are a single line of python code at most 2 inches long.  The three metrics rmse, mse, rmd, and rms are at their core conceptually identical.</p>
+
+<p>RMSE answers the question: ""How similar, on average, are the numbers in <code>list1</code> to <code>list2</code>?"".  The two lists must be the same size.  I want to ""wash out the noise between any two given elements, wash out the size of the data collected, and get a single number feel for change over time"". </p>
+
+<h2>Intuition and ELI5 for RMSE:</h2>
+
+<p>Imagine you are learning to throw darts at a dart board.  Every day you practice for one hour.  You want to figure out if you are getting better or getting worse.  So every day you make 10 throws and measure the distance between the bullseye and where your dart hit.</p>
+
+<p>You make a list of those numbers <code>list1</code>.  Use the root mean squared error between the distances at day 1 and a <code>list2</code> containing all zeros.  Do the same on the 2nd and nth days.  What you will get is a single number that hopefully decreases over time.  When your RMSE number is zero, you hit bullseyes every time.  If the rmse number goes up, you are getting worse.</p>
+
+<h2><strong>Example in calculating root mean squared error in python:</strong></h2>
+
+<pre><code>import numpy as np
+d = [0.000, 0.166, 0.333]   #ideal target distances, these can be all zeros.
+p = [0.000, 0.254, 0.998]   #your performance goes here
+
+print(""d is: "" + str([""%.8f"" % elem for elem in d]))
+print(""p is: "" + str([""%.8f"" % elem for elem in p]))
+
+def rmse(predictions, targets):
+    return np.sqrt(((predictions - targets) ** 2).mean())
+
+rmse_val = rmse(np.array(d), np.array(p))
+print(""rms error is: "" + str(rmse_val))
+</code></pre>
+
+<p>Which prints:</p>
+
+<pre><code>d is: ['0.00000000', '0.16600000', '0.33300000']
+p is: ['0.00000000', '0.25400000', '0.99800000']
+rms error between lists d and p is: 0.387284994115
+</code></pre>
+
+<h2><strong>The mathematical notation:</strong></h2>
+
+<p><a href=""https://i.stack.imgur.com/RIq96.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/RIq96.png"" alt=""root mean squared deviation explained""></a></p>
+
+<p><strong>Glyph Legend:</strong> <code>n</code> is a whole positive integer representing the number of throws.  <code>i</code> represents a whole positive integer counter that enumerates sum.  <code>d</code> stands for the ideal distances, the <code>list2</code> containing all zeros in above example.  <code>p</code> stands for performance, the <code>list1</code> in the above example.  superscript 2 stands for numeric squared.  <strong>d<sub>i</sub></strong> is the i'th index of <code>d</code>.  <strong>p<sub>i</sub></strong> is the i'th index of <code>p</code>.</p>
+
+<p><strong>The rmse done in small steps so it can be understood:</strong></p>
+
+<pre><code>def rmse(predictions, targets):
+
+    differences = predictions - targets                       #the DIFFERENCEs.
+
+    differences_squared = differences ** 2                    #the SQUAREs of ^
+
+    mean_of_differences_squared = differences_squared.mean()  #the MEAN of ^
+
+    rmse_val = np.sqrt(mean_of_differences_squared)           #ROOT of ^
+
+    return rmse_val                                           #get the ^
+</code></pre>
+
+<h2>How does every step of RMSE work:</h2>
+
+<p>Subtracting one number from another gives you the distance between them.</p>
+
+<pre><code>8 - 5 = 3         #absolute distance between 8 and 5 is +3
+-20 - 10 = -30    #absolute distance between -20 and 10 is +30
+</code></pre>
+
+<p>If you multiply any number times itself, the result is always positive because negative times negative is positive:  </p>
+
+<pre><code>3*3     = 9   = positive
+-30*-30 = 900 = positive
+</code></pre>
+
+<p>Add them all up, but wait, then an array with many elements would have a larger error than a small array, so average them by the number of elements.</p>
+
+<p>But wait, we squared them all earlier to force them positive.  Undo the damage with a square root!  </p>
+
+<p>That leaves you with a single number that represents, on average, the distance between every value of list1 to it's corresponding element value of list2.</p>
+
+<p>If the RMSE value goes down over time we are happy because <a href=""https://en.wikipedia.org/wiki/Variance"" rel=""noreferrer"" title=""variance"">variance</a> is decreasing.</p>
+
+<h2>RMSE isn't the most accurate line fitting strategy, total least squares is:</h2>
+
+<p>Root mean squared error measures the vertical distance between the point and the line, so if your data is shaped like a banana, flat near the bottom and steep near the top, then the RMSE will report greater distances to points high, but short distances to points low when in fact the distances are equivalent. This causes a skew where the line prefers to be closer to points high than low.</p>
+
+<p>If this is a problem the total least squares method fixes this: 
+<a href=""https://mubaris.com/posts/linear-regression"" rel=""noreferrer"">https://mubaris.com/posts/linear-regression</a></p>
+
+<h2>Gotchas that can break this RMSE function:</h2>
+
+<p>If there are nulls or infinity in either input list, then output rmse value is is going to not make sense.  There are three strategies to deal with nulls / missing values / infinities in either list: Ignore that component, zero it out or add a best guess or a uniform random noise to all timesteps.  Each remedy has its pros and cons depending on what your data means.  In general ignoring any component with a missing value is preferred, but this biases the RMSE toward zero making you think performance has improved when it really hasn't.  Adding random noise on a best guess could be preferred if there are lots of missing values.  </p>
+
+<p>In order to guarantee relative correctness of the RMSE output, you must eliminate all nulls/infinites from the input.</p>
+
+<h2>RMSE has zero tolerance for outlier data points which don't belong</h2>
+
+<p>Root mean squared error squares relies on all data being right and all are counted as equal.  That means one stray point that's way out in left field is going to totally ruin the whole calculation.  To handle outlier data points and dismiss their tremendous influence after a certain threshold, see Robust estimators that build in a threshold for dismissal of outliers.</p>
+","445131","","445131","","2019-07-10 17:12:23","2019-07-10 17:12:23","","","","3","","","","CC BY-SA 4.0"
+"55800364","2","","17197492","2019-04-22 19:59:27","","9","","<p>Just in case someone finds this thread in 2019, there is a library called <code>ml_metrics</code> which is available without pre-installation in Kaggle's kernels, pretty lightweighted and accessible through <code>pypi</code> ( it can be installed easily and fast with <code>pip install ml_metrics</code>):</p>
+
+<pre class=""lang-py prettyprint-override""><code>from ml_metrics import rmse
+rmse(actual=[0, 1, 2], predicted=[1, 10, 5])
+# 5.507570547286102
+</code></pre>
+
+<p>It has few other interesting metrics which are not available in <code>sklearn</code>, like <code>mapk</code>.</p>
+
+<p>References:</p>
+
+<ul>
+<li><a href=""https://pypi.org/project/ml_metrics/"" rel=""noreferrer"">https://pypi.org/project/ml_metrics/</a></li>
+<li><a href=""https://github.com/benhamner/Metrics/tree/master/Python"" rel=""noreferrer"">https://github.com/benhamner/Metrics/tree/master/Python</a></li>
+</ul>
+","3254400","","","","","2019-04-22 19:59:27","","","","0","","","","CC BY-SA 4.0"
+"59920431","2","","17197492","2020-01-26 16:38:42","","28","","<p>In scikit-learn 0.22.0 you can pass <code>mean_squared_error()</code> the argument <code>squared=False</code> to return the RMSE.</p>
+
+<pre><code>from sklearn.metrics import mean_squared_error
+
+mean_squared_error(y_actual, y_predicted, squared=False)
+
+</code></pre>
+","4590385","","","","","2020-01-26 16:38:42","","","","1","","","","CC BY-SA 4.0"
+"60507671","2","","17197492","2020-03-03 12:50:58","","6","","<p>You can't find RMSE function directly in SKLearn.
+But , instead of manually doing sqrt , there is another standard way using sklearn.
+Apparently, Sklearn's mean_squared_error itself contains a parameter called as ""squared"" with default  value as true .If we set it to false ,the same function will return RMSE instead of MSE.</p>
+
+<pre><code># code changes implemented by Esha Prakash
+from sklearn.metrics import mean_squared_error
+rmse = mean_squared_error(y_true, y_pred , squared=False)
+</code></pre>
+","12999612","","12999612","","2020-03-04 06:32:43","2020-03-04 06:32:43","","","","0","","","","CC BY-SA 4.0"
+"20225985","2","","20224526","2013-11-26 19:14:46","","12","","<pre><code>from StringIO import StringIO
+out = StringIO()
+out = tree.export_graphviz(clf, out_file=out)
+print out.getvalue()
+</code></pre>
+
+<p>You can see a digraph Tree. Then, <code>clf.tree_.feature</code> and <code>clf.tree_.value</code> are array of nodes splitting feature and array of nodes values respectively. You can refer to more details from this <a href=""https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/tree/export.py"">github source</a>. </p>
+","2907532","","","","","2013-11-26 19:14:46","","","","1","","","","CC BY-SA 3.0"
+"22261053","2","","20224526","2014-03-07 21:31:16","","49","","<p>I created my own function to extract the rules from the decision trees created by sklearn:</p>
+
+<pre><code>import pandas as pd
+import numpy as np
+from sklearn.tree import DecisionTreeClassifier
+
+# dummy data:
+df = pd.DataFrame({'col1':[0,1,2,3],'col2':[3,4,5,6],'dv':[0,1,0,1]})
+
+# create decision tree
+dt = DecisionTreeClassifier(max_depth=5, min_samples_leaf=1)
+dt.fit(df.ix[:,:2], df.dv)
+</code></pre>
+
+<p>This function first starts with the nodes (identified by -1 in the child arrays) and then recursively finds the parents. I call this a node's 'lineage'.  Along the way, I grab the values I need to create if/then/else SAS logic:</p>
+
+<pre><code>def get_lineage(tree, feature_names):
+     left      = tree.tree_.children_left
+     right     = tree.tree_.children_right
+     threshold = tree.tree_.threshold
+     features  = [feature_names[i] for i in tree.tree_.feature]
+
+     # get ids of child nodes
+     idx = np.argwhere(left == -1)[:,0]     
+
+     def recurse(left, right, child, lineage=None):          
+          if lineage is None:
+               lineage = [child]
+          if child in left:
+               parent = np.where(left == child)[0].item()
+               split = 'l'
+          else:
+               parent = np.where(right == child)[0].item()
+               split = 'r'
+
+          lineage.append((parent, split, threshold[parent], features[parent]))
+
+          if parent == 0:
+               lineage.reverse()
+               return lineage
+          else:
+               return recurse(left, right, parent, lineage)
+
+     for child in idx:
+          for node in recurse(left, right, child):
+               print node
+</code></pre>
+
+<p>The sets of tuples below contain everything I need to create SAS if/then/else statements. I do not like using <code>do</code> blocks in SAS which is why I create logic describing a node's entire path. The single integer after the tuples is the ID of the terminal node in a path. All of the preceding tuples combine to create that node.</p>
+
+<pre><code>In [1]: get_lineage(dt, df.columns)
+(0, 'l', 0.5, 'col1')
+1
+(0, 'r', 0.5, 'col1')
+(2, 'l', 4.5, 'col2')
+3
+(0, 'r', 0.5, 'col1')
+(2, 'r', 4.5, 'col2')
+(4, 'l', 2.5, 'col1')
+5
+(0, 'r', 0.5, 'col1')
+(2, 'r', 4.5, 'col2')
+(4, 'r', 2.5, 'col1')
+6
+</code></pre>
+
+<p><img src=""https://i.stack.imgur.com/SWwtO.png"" alt=""GraphViz output of example tree""></p>
+","919872","","","","","2014-03-07 21:31:16","","","","4","","","","CC BY-SA 3.0"
+"30104792","2","","20224526","2015-05-07 14:58:42","","38","","<p>I modified the code submitted by <a href=""https://stackoverflow.com/users/919872/zelazny7"">Zelazny7</a> to print some pseudocode:</p>
+
+<pre><code>def get_code(tree, feature_names):
+        left      = tree.tree_.children_left
+        right     = tree.tree_.children_right
+        threshold = tree.tree_.threshold
+        features  = [feature_names[i] for i in tree.tree_.feature]
+        value = tree.tree_.value
+
+        def recurse(left, right, threshold, features, node):
+                if (threshold[node] != -2):
+                        print ""if ( "" + features[node] + "" &lt;= "" + str(threshold[node]) + "" ) {""
+                        if left[node] != -1:
+                                recurse (left, right, threshold, features,left[node])
+                        print ""} else {""
+                        if right[node] != -1:
+                                recurse (left, right, threshold, features,right[node])
+                        print ""}""
+                else:
+                        print ""return "" + str(value[node])
+
+        recurse(left, right, threshold, features, 0)
+</code></pre>
+
+<p>if you call <code>get_code(dt, df.columns)</code> on the same example you will obtain:</p>
+
+<pre><code>if ( col1 &lt;= 0.5 ) {
+return [[ 1.  0.]]
+} else {
+if ( col2 &lt;= 4.5 ) {
+return [[ 0.  1.]]
+} else {
+if ( col1 &lt;= 2.5 ) {
+return [[ 1.  0.]]
+} else {
+return [[ 0.  1.]]
+}
+}
+}
+</code></pre>
+","1885917","","-1","","2017-05-23 12:34:27","2015-05-07 14:58:42","","","","6","","","","CC BY-SA 3.0"
+"39772170","2","","20224526","2016-09-29 13:49:10","","148","","<p>I believe that this answer is more correct than the other answers here:</p>
+
+<pre><code>from sklearn.tree import _tree
+
+def tree_to_code(tree, feature_names):
+    tree_ = tree.tree_
+    feature_name = [
+        feature_names[i] if i != _tree.TREE_UNDEFINED else ""undefined!""
+        for i in tree_.feature
+    ]
+    print ""def tree({}):"".format("", "".join(feature_names))
+
+    def recurse(node, depth):
+        indent = ""  "" * depth
+        if tree_.feature[node] != _tree.TREE_UNDEFINED:
+            name = feature_name[node]
+            threshold = tree_.threshold[node]
+            print ""{}if {} &lt;= {}:"".format(indent, name, threshold)
+            recurse(tree_.children_left[node], depth + 1)
+            print ""{}else:  # if {} &gt; {}"".format(indent, name, threshold)
+            recurse(tree_.children_right[node], depth + 1)
+        else:
+            print ""{}return {}"".format(indent, tree_.value[node])
+
+    recurse(0, 1)
+</code></pre>
+
+<p>This prints out a valid Python function. Here's an example output for a tree that is trying to return its input, a number between 0 and 10.</p>
+
+<pre><code>def tree(f0):
+  if f0 &lt;= 6.0:
+    if f0 &lt;= 1.5:
+      return [[ 0.]]
+    else:  # if f0 &gt; 1.5
+      if f0 &lt;= 4.5:
+        if f0 &lt;= 3.5:
+          return [[ 3.]]
+        else:  # if f0 &gt; 3.5
+          return [[ 4.]]
+      else:  # if f0 &gt; 4.5
+        return [[ 5.]]
+  else:  # if f0 &gt; 6.0
+    if f0 &lt;= 8.5:
+      if f0 &lt;= 7.5:
+        return [[ 7.]]
+      else:  # if f0 &gt; 7.5
+        return [[ 8.]]
+    else:  # if f0 &gt; 8.5
+      return [[ 9.]]
+</code></pre>
+
+<p>Here are some stumbling blocks that I see in other answers:</p>
+
+<ol>
+<li>Using <code>tree_.threshold == -2</code> to decide whether a node is a leaf isn't a good idea. What if it's a real decision node with a threshold of -2? Instead, you should look at <code>tree.feature</code> or <code>tree.children_*</code>.</li>
+<li>The line <code>features = [feature_names[i] for i in tree_.feature]</code> crashes with my version of sklearn, because some values of <code>tree.tree_.feature</code> are -2 (specifically for leaf nodes).</li>
+<li>There is no need to have multiple if statements in the recursive function, just one is fine.</li>
+</ol>
+","695561","","1146713","","2016-10-25 04:40:36","2016-10-25 04:40:36","","","","9","","","","CC BY-SA 3.0"
+"42227468","2","","20224526","2017-02-14 13:30:31","","14","","<p>There is a new <a href=""http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier"" rel=""nofollow noreferrer""><code>DecisionTreeClassifier</code></a> method, <code>decision_path</code>, in the <a href=""http://scikit-learn.org/stable/whats_new.html#version-0-18"" rel=""nofollow noreferrer"">0.18.0</a> release.  The developers provide an extensive (well-documented) <a href=""http://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html"" rel=""nofollow noreferrer"">walkthrough</a>.</p>
+
+<p>The first section of code in the walkthrough that prints the tree structure seems to be OK.  However, I modified the code in the second section to interrogate one sample.  My changes denoted with <code># &lt;--</code></p>
+
+<p><strong>Edit</strong> The changes marked by <code># &lt;--</code> in the code below have since been updated in walkthrough link after the errors were pointed out in pull requests <a href=""https://github.com/scikit-learn/scikit-learn/pull/8653"" rel=""nofollow noreferrer"">#8653</a> and <a href=""https://github.com/scikit-learn/scikit-learn/pull/10951"" rel=""nofollow noreferrer"">#10951</a>. It's much easier to follow along now. </p>
+
+<pre><code>sample_id = 0
+node_index = node_indicator.indices[node_indicator.indptr[sample_id]:
+                                    node_indicator.indptr[sample_id + 1]]
+
+print('Rules used to predict sample %s: ' % sample_id)
+for node_id in node_index:
+
+    if leave_id[sample_id] == node_id:  # &lt;-- changed != to ==
+        #continue # &lt;-- comment out
+        print(""leaf node {} reached, no decision here"".format(leave_id[sample_id])) # &lt;--
+
+    else: # &lt; -- added else to iterate through decision nodes
+        if (X_test[sample_id, feature[node_id]] &lt;= threshold[node_id]):
+            threshold_sign = ""&lt;=""
+        else:
+            threshold_sign = ""&gt;""
+
+        print(""decision id node %s : (X[%s, %s] (= %s) %s %s)""
+              % (node_id,
+                 sample_id,
+                 feature[node_id],
+                 X_test[sample_id, feature[node_id]], # &lt;-- changed i to sample_id
+                 threshold_sign,
+                 threshold[node_id]))
+
+Rules used to predict sample 0: 
+decision id node 0 : (X[0, 3] (= 2.4) &gt; 0.800000011921)
+decision id node 2 : (X[0, 2] (= 5.1) &gt; 4.94999980927)
+leaf node 4 reached, no decision here
+</code></pre>
+
+<p>Change the <code>sample_id</code> to see the decision paths for other samples.  I haven't asked the developers about these changes, just seemed more intuitive when working through the example.</p>
+","4541548","","4541548","","2018-11-27 18:44:33","2018-11-27 18:44:33","","","","5","","","","CC BY-SA 4.0"
+"57335067","2","","20224526","2019-08-03 02:35:50","","21","","<p>Scikit learn introduced a delicious new method called <code>export_text</code> in version 0.21 (May 2019) to extract the rules from a tree. <a href=""https://scikit-learn.org/stable/modules/generated/sklearn.tree.export_text.html"" rel=""nofollow noreferrer"">Documentation here</a>. It's no longer necessary to create a custom function.</p>
+<p>Once you've fit your model, you just need two lines of code. First, import <code>export_text</code>:</p>
+<pre><code>from sklearn.tree import export_text
+</code></pre>
+<p>Second, create an object that will contain your rules. To make the rules look more readable, use the <code>feature_names</code> argument and pass a list of your feature names. For example, if your model is called <code>model</code> and your features are named in a dataframe called <code>X_train</code>, you could create an object called <code>tree_rules</code>:</p>
+<pre><code>tree_rules = export_text(model, feature_names=list(X_train.columns))
+</code></pre>
+<p>Then just print or save <code>tree_rules</code>. Your output will look like this:</p>
+<pre><code>|--- Age &lt;= 0.63
+|   |--- EstimatedSalary &lt;= 0.61
+|   |   |--- Age &lt;= -0.16
+|   |   |   |--- class: 0
+|   |   |--- Age &gt;  -0.16
+|   |   |   |--- EstimatedSalary &lt;= -0.06
+|   |   |   |   |--- class: 0
+|   |   |   |--- EstimatedSalary &gt;  -0.06
+|   |   |   |   |--- EstimatedSalary &lt;= 0.40
+|   |   |   |   |   |--- EstimatedSalary &lt;= 0.03
+|   |   |   |   |   |   |--- class: 1
+</code></pre>
+","10817844","","11008834","","2020-10-09 20:20:38","2020-10-09 20:20:38","","","","0","","","","CC BY-SA 4.0"
+"21031303","2","","21030391","2014-01-09 21:15:33","","175","","<p>If you're using scikit-learn you can use <a href=""http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.normalize.html#sklearn.preprocessing.normalize"" rel=""noreferrer""><code>sklearn.preprocessing.normalize</code></a>:</p>
+
+<pre><code>import numpy as np
+from sklearn.preprocessing import normalize
+
+x = np.random.rand(1000)*10
+norm1 = x / np.linalg.norm(x)
+norm2 = normalize(x[:,np.newaxis], axis=0).ravel()
+print np.all(norm1 == norm2)
+# True
+</code></pre>
+","1461210","","1461210","","2014-01-09 21:27:58","2014-01-09 21:27:58","","","","5","","","","CC BY-SA 3.0"
+"21032099","2","","21030391","2014-01-09 21:59:18","","53","","<p>I would agree that it were nice if such a function was part of the included batteries. But it isn't, as far as I know. Here is a version for arbitrary axes, and giving optimal performance.</p>
+
+<pre><code>import numpy as np
+
+def normalized(a, axis=-1, order=2):
+    l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
+    l2[l2==0] = 1
+    return a / np.expand_dims(l2, axis)
+
+A = np.random.randn(3,3,3)
+print(normalized(A,0))
+print(normalized(A,1))
+print(normalized(A,2))
+
+print(normalized(np.arange(3)[:,None]))
+print(normalized(np.arange(3)))
+</code></pre>
+","613246","","1478537","","2017-10-17 08:05:12","2017-10-17 08:05:12","","","","10","","","","CC BY-SA 3.0"
+"40360416","2","","21030391","2016-11-01 12:49:49","","24","","<p>You can specify ord to get the L1 norm.
+To avoid zero division I use eps, but that's maybe not great.</p>
+
+<pre><code>def normalize(v):
+    norm=np.linalg.norm(v, ord=1)
+    if norm==0:
+        norm=np.finfo(v.dtype).eps
+    return v/norm
+</code></pre>
+","1335334","","","","","2016-11-01 12:49:49","","","","1","","","","CC BY-SA 3.0"
+"49873465","2","","21030391","2018-04-17 08:39:04","","9","","<p>There is also the function <code>unit_vector()</code> to normalize vectors in the popular <a href=""https://www.lfd.uci.edu/~gohlke/code/transformations.py.html"" rel=""noreferrer"">transformations</a> module by Christoph Gohlke:</p>
+
+<pre><code>import transformations as trafo
+import numpy as np
+
+data = np.array([[1.0, 1.0, 0.0],
+                 [1.0, 1.0, 1.0],
+                 [1.0, 2.0, 3.0]])
+
+print(trafo.unit_vector(data, axis=1))
+</code></pre>
+","7919597","","7919597","","2018-04-24 06:05:06","2018-04-24 06:05:06","","","","0","","","","CC BY-SA 3.0"
+"50243242","2","","21030391","2018-05-08 22:46:42","","10","","<p>If you have multidimensional data and want each axis normalized to its max or its sum:</p>
+
+<pre><code>def normalize(_d, to_sum=True, copy=True):
+    # d is a (n x dimension) np array
+    d = _d if not copy else np.copy(_d)
+    d -= np.min(d, axis=0)
+    d /= (np.sum(d, axis=0) if to_sum else np.ptp(d, axis=0))
+    return d
+</code></pre>
+
+<p>Uses numpys <a href=""https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.ptp.html"" rel=""nofollow noreferrer"">peak to peak</a> function.</p>
+
+<pre><code>a = np.random.random((5, 3))
+
+b = normalize(a, copy=False)
+b.sum(axis=0) # array([1., 1., 1.]), the rows sum to 1
+
+c = normalize(a, to_sum=False, copy=False)
+c.max(axis=0) # array([1., 1., 1.]), the max of each row is 1
+</code></pre>
+","1914230","","1914230","","2019-09-03 17:02:20","2019-09-03 17:02:20","","","","1","","","","CC BY-SA 4.0"
+"51512965","2","","21030391","2018-07-25 07:17:43","","16","","<p>This might also work for you</p>
+
+<pre><code>import numpy as np
+normalized_v = v / np.sqrt(np.sum(v**2))
+</code></pre>
+
+<p>but fails when <code>v</code> has length 0.</p>
+
+
+","5763590","","1278365","","2019-02-13 03:47:04","2019-02-13 03:47:04","","","","0","","","","CC BY-SA 4.0"
+"54467216","2","","21030391","2019-01-31 18:39:40","","7","","<p>If you're working with 3D vectors, you can do this concisely using the toolbelt <a href=""https://github.com/lace/vg"" rel=""noreferrer"">vg</a>. It's a light layer on top of numpy and it supports single values and stacked vectors.</p>
+
+<pre><code>import numpy as np
+import vg
+
+x = np.random.rand(1000)*10
+norm1 = x / np.linalg.norm(x)
+norm2 = vg.normalize(x)
+print np.all(norm1 == norm2)
+# True
+</code></pre>
+
+<p>I created the library at my last startup, where it was motivated by uses like this: simple ideas which are way too verbose in NumPy.</p>
+","893113","","893113","","2019-01-31 21:27:18","2019-01-31 21:27:18","","","","0","","","","CC BY-SA 4.0"
+"55273044","2","","21030391","2019-03-21 02:47:07","","9","","<p>You mentioned sci-kit learn, so I want to share another solution.</p>
+
+<h3>sci-kit learn <code>MinMaxScaler</code></h3>
+
+<p>In sci-kit learn, there is a API called <code>MinMaxScaler</code> which can customize the the value range as you like.</p>
+
+<p>It also deal with NaN issues for us. </p>
+
+<blockquote>
+  <p>NaNs are treated as missing values: disregarded in fit, and maintained
+  in transform. ... see reference [1]</p>
+</blockquote>
+
+<h3>Code sample</h3>
+
+<p>The code is simple, just type</p>
+
+<pre><code># Let's say X_train is your input dataframe
+from sklearn.preprocessing import MinMaxScaler
+# call MinMaxScaler object
+min_max_scaler = MinMaxScaler()
+# feed in a numpy array
+X_train_norm = min_max_scaler.fit_transform(X_train.values)
+# wrap it up if you need a dataframe
+df = pd.DataFrame(X_train_norm)
+</code></pre>
+
+Reference
+
+<ul>
+<li>[1]  <a href=""https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html"" rel=""noreferrer"">sklearn.preprocessing.MinMaxScaler</a></li>
+</ul>
+","1115215","","11736303","","2020-01-30 15:55:30","2020-01-30 15:55:30","","","","0","","","","CC BY-SA 4.0"
+"56778209","2","","21030391","2019-06-26 17:27:41","","6","","<p>Without <code>sklearn</code> and using just <code>numpy</code>.
+Just define a function:.</p>
+
+<p><strong>Assuming that the <em>rows are the variables</em> and <em>the columns the samples</em> (<code>axis= 1</code>):</strong></p>
+
+<pre><code>import numpy as np
+
+# Example array
+X = np.array([[1,2,3],[4,5,6]])
+
+def stdmtx(X):
+    means = X.mean(axis =1)
+    stds = X.std(axis= 1, ddof=1)
+    X= X - means[:, np.newaxis]
+    X= X / stds[:, np.newaxis]
+    return np.nan_to_num(X)
+
+</code></pre>
+
+<p><strong>output:</strong></p>
+
+<pre><code>X
+array([[1, 2, 3],
+       [4, 5, 6]])
+
+stdmtx(X)
+array([[-1.,  0.,  1.],
+       [-1.,  0.,  1.]])
+
+</code></pre>
+","5025009","","5025009","","2019-06-26 20:21:09","2019-06-26 20:21:09","","","","0","","","","CC BY-SA 4.0"
+"24475412","2","","24458645","2014-06-29 10:56:42","","6","","<p>No, <code>LabelEncoder</code> does not do this. It takes 1-d arrays of class labels and produces 1-d arrays. It's designed to handle class labels in classification problems, not arbitrary data, and any attempt to force it into other uses will require code to transform the actual problem to the problem it solves (and the solution back to the original space).</p>
+","166749","","","","","2014-06-29 10:56:42","","","","3","","","","CC BY-SA 3.0"
+"28978722","2","","24458645","2015-03-11 04:43:58","","6","","<p>Assuming you are simply trying to get a <code>sklearn.preprocessing.LabelEncoder()</code> object that can be used to represent your columns, all you have to do is:</p>
+
+<pre><code>le.fit(df.columns)
+</code></pre>
+
+<p>In the above code you will have a unique number corresponding to each column.
+More precisely, you will have a 1:1 mapping of <code>df.columns</code> to <code>le.transform(df.columns.get_values())</code>. To get a column's encoding, simply pass it to <code>le.transform(...)</code>. As an example, the following will get the encoding for each column:</p>
+
+<pre><code>le.transform(df.columns.get_values())
+</code></pre>
+
+<p>Assuming you want to create a <code>sklearn.preprocessing.LabelEncoder()</code> object for all of your row labels you can do the following:</p>
+
+<pre><code>le.fit([y for x in df.get_values() for y in x])
+</code></pre>
+
+<p>In this case, you most likely have non-unique row labels (as shown in your question). To see what classes the encoder created you can do <code>le.classes_</code>. You'll note that this should have the same elements as in <code>set(y for x in df.get_values() for y in x)</code>. Once again to convert a row label to an encoded label use <code>le.transform(...)</code>. As an example, if you want to retrieve the label for the first column in the <code>df.columns</code> array and the first row, you could do this:</p>
+
+<pre><code>le.transform([df.get_value(0, df.columns[0])])
+</code></pre>
+
+<p>The question you had in your comment is a bit more complicated, but can still
+be accomplished:</p>
+
+<pre><code>le.fit([str(z) for z in set((x[0], y) for x in df.iteritems() for y in x[1])])
+</code></pre>
+
+<p>The above code does the following:</p>
+
+<ol>
+<li>Make a unique combination of all of the pairs of (column, row)</li>
+<li>Represent each pair as a string version of the tuple. This is a workaround to overcome the <code>LabelEncoder</code> class not supporting tuples as a class name.</li>
+<li>Fits the new items to the <code>LabelEncoder</code>.</li>
+</ol>
+
+<p>Now to use this new model it's a bit more complicated. Assuming we want to extract the representation for the same item we looked up in the previous example (the first column in df.columns and the first row), we can do this:</p>
+
+<pre><code>le.transform([str((df.columns[0], df.get_value(0, df.columns[0])))])
+</code></pre>
+
+<p>Remember that each lookup is now a string representation of a tuple that
+contains the (column, row).</p>
+","1117216","","","","","2015-03-11 04:43:58","","","","0","","","","CC BY-SA 3.0"
+"30267328","2","","24458645","2015-05-15 19:27:05","","103","","<p>As mentioned by larsmans, <a href=""http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html"" rel=""noreferrer"">LabelEncoder() only takes a 1-d array as an argument</a>. That said, it is quite easy to roll your own label encoder that operates on multiple columns of your choosing, and returns a transformed dataframe. My code here is based in part on Zac Stewart's excellent blog post found <a href=""http://zacstewart.com/2014/08/05/pipelines-of-featureunions-of-pipelines.html"" rel=""noreferrer"">here</a>.</p>
+
+<p>Creating a custom encoder involves simply creating a class that responds to the <code>fit()</code>, <code>transform()</code>, and <code>fit_transform()</code> methods. In your case, a good start might be something like this:
+</p>
+
+<pre><code>import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.pipeline import Pipeline
+
+# Create some toy data in a Pandas dataframe
+fruit_data = pd.DataFrame({
+    'fruit':  ['apple','orange','pear','orange'],
+    'color':  ['red','orange','green','green'],
+    'weight': [5,6,3,4]
+})
+
+class MultiColumnLabelEncoder:
+    def __init__(self,columns = None):
+        self.columns = columns # array of column names to encode
+
+    def fit(self,X,y=None):
+        return self # not relevant here
+
+    def transform(self,X):
+        '''
+        Transforms columns of X specified in self.columns using
+        LabelEncoder(). If no columns specified, transforms all
+        columns in X.
+        '''
+        output = X.copy()
+        if self.columns is not None:
+            for col in self.columns:
+                output[col] = LabelEncoder().fit_transform(output[col])
+        else:
+            for colname,col in output.iteritems():
+                output[colname] = LabelEncoder().fit_transform(col)
+        return output
+
+    def fit_transform(self,X,y=None):
+        return self.fit(X,y).transform(X)
+</code></pre>
+
+<p>Suppose we want to encode our two categorical attributes (<code>fruit</code> and <code>color</code>), while leaving the numeric attribute <code>weight</code> alone. We could do this as follows:
+</p>
+
+<pre><code>MultiColumnLabelEncoder(columns = ['fruit','color']).fit_transform(fruit_data)
+</code></pre>
+
+<p>Which transforms our <code>fruit_data</code> dataset from</p>
+
+<p><img src=""https://i.stack.imgur.com/aqGcU.png"" alt=""enter image description here""> to </p>
+
+<p><img src=""https://i.stack.imgur.com/xISwE.png"" alt=""enter image description here""></p>
+
+<p>Passing it a dataframe consisting entirely of categorical variables and omitting the <code>columns</code> parameter will result in every column being encoded (which I believe is what you were originally looking for):
+</p>
+
+<pre><code>MultiColumnLabelEncoder().fit_transform(fruit_data.drop('weight',axis=1))
+</code></pre>
+
+<p>This transforms</p>
+
+<p><img src=""https://i.stack.imgur.com/zKgcI.png"" alt=""enter image description here""> to</p>
+
+<p><img src=""https://i.stack.imgur.com/5KwKW.png"" alt=""enter image description here"">.</p>
+
+<p>Note that it'll probably choke when it tries to encode attributes that are already numeric (add some code to handle this if you like).</p>
+
+<p>Another nice feature about this is that we can use this custom transformer in a pipeline:
+</p>
+
+<pre><code>encoding_pipeline = Pipeline([
+    ('encoding',MultiColumnLabelEncoder(columns=['fruit','color']))
+    # add more pipeline steps as needed
+])
+encoding_pipeline.fit_transform(fruit_data)
+</code></pre>
+","1610342","","","","","2015-05-15 19:27:05","","","","13","","","","CC BY-SA 3.0"
+"31939145","2","","24458645","2015-08-11 10:21:03","","475","","<p>You can easily do this though,</p>
+<pre><code>df.apply(LabelEncoder().fit_transform)
+</code></pre>
+<p>EDIT2:</p>
+<p>In scikit-learn 0.20, the recommended way is</p>
+<pre><code>OneHotEncoder().fit_transform(df)
+</code></pre>
+<p>as the OneHotEncoder now supports string input.
+Applying OneHotEncoder only to certain columns is possible with the ColumnTransformer.</p>
+<p>EDIT3:</p>
+<p>Since this answer is over a year ago, and generated many upvotes (including a bounty), I should probably extend this further.</p>
+<p>For inverse_transform and transform, you have to do a little bit of hack.</p>
+<pre><code>from collections import defaultdict
+d = defaultdict(LabelEncoder)
+</code></pre>
+<p>With this, you now retain all columns <code>LabelEncoder</code> as dictionary.</p>
+<pre><code># Encoding the variable
+fit = df.apply(lambda x: d[x.name].fit_transform(x))
+
+# Inverse the encoded
+fit.apply(lambda x: d[x.name].inverse_transform(x))
+
+# Using the dictionary to label future data
+df.apply(lambda x: d[x.name].transform(x))
+</code></pre>
+<p>MOAR EDIT:</p>
+<p>Using Neuraxle's <a href=""https://www.neuraxle.org/stable/api/neuraxle.steps.loop.html#neuraxle.steps.loop.FlattenForEach"" rel=""nofollow noreferrer""><code>FlattenForEach</code></a> step, it's possible to do this as well to use the same <a href=""https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html"" rel=""nofollow noreferrer""><code>LabelEncoder</code></a> on all the flattened data at once:</p>
+<pre><code>FlattenForEach(LabelEncoder(), then_unflatten=True).fit_transform(df)
+</code></pre>
+<p>For using separate <code>LabelEncoder</code>s depending for your columns of data, or if only some of your columns of data needs to be label-encoded and not others, then using a <a href=""https://stackoverflow.com/a/60302366/2476920""><code>ColumnTransformer</code></a> is a solution that allows for more control on your column selection and your LabelEncoder instances.</p>
+","1296136","","2476920","","2020-11-22 05:09:03","2020-11-22 05:09:03","","","","15","","","","CC BY-SA 4.0"
+"37038257","2","","24458645","2016-05-04 21:21:54","","16","","<p>We don't need a LabelEncoder.</p>
+
+<p>You can convert the columns to categoricals and then get their codes.  I used a dictionary comprehension below to apply this process to every column and wrap the result back into a dataframe of the same shape with identical indices and column names.</p>
+
+<pre><code>&gt;&gt;&gt; pd.DataFrame({col: df[col].astype('category').cat.codes for col in df}, index=df.index)
+   location  owner  pets
+0         1      1     0
+1         0      2     1
+2         0      0     0
+3         1      1     2
+4         1      3     1
+5         0      2     1
+</code></pre>
+
+<p>To create a mapping dictionary, you can just enumerate the categories using a dictionary comprehension:</p>
+
+<pre><code>&gt;&gt;&gt; {col: {n: cat for n, cat in enumerate(df[col].astype('category').cat.categories)} 
+     for col in df}
+
+{'location': {0: 'New_York', 1: 'San_Diego'},
+ 'owner': {0: 'Brick', 1: 'Champ', 2: 'Ron', 3: 'Veronica'},
+ 'pets': {0: 'cat', 1: 'dog', 2: 'monkey'}}
+</code></pre>
+","2411802","","2411802","","2016-05-04 21:37:16","2016-05-04 21:37:16","","","","1","","","","CC BY-SA 3.0"
+"38013439","2","","24458645","2016-06-24 12:26:42","","9","","<p>this does not directly answer your question (for which Naputipulu Jon and PriceHardman have fantastic replies)</p>
+
+<p>However, for the purpose of a few classification tasks etc. you could use</p>
+
+<pre><code>pandas.get_dummies(input_df) 
+</code></pre>
+
+<p>this can input dataframe with categorical data and return a dataframe with binary values. variable values are encoded into column names in the resulting dataframe. <a href=""http://pandas.pydata.org/pandas-docs/stable/generated/pandas.get_dummies.html"" rel=""noreferrer"">more</a></p>
+","1475752","","","","","2016-06-24 12:26:42","","","","0","","","","CC BY-SA 3.0"
+"52801019","2","","24458645","2018-10-14 08:53:41","","22","","<p>Since scikit-learn 0.20 you can use <code>sklearn.compose.ColumnTransformer</code> and <code>sklearn.preprocessing.OneHotEncoder</code>:</p>
+
+<p>If you only have categorical variables, <code>OneHotEncoder</code> directly:</p>
+
+<pre><code>from sklearn.preprocessing import OneHotEncoder
+
+OneHotEncoder(handle_unknown='ignore').fit_transform(df)
+</code></pre>
+
+<p>If you have heterogeneously typed features:</p>
+
+<pre><code>from sklearn.compose import make_column_transformer
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import OneHotEncoder
+
+categorical_columns = ['pets', 'owner', 'location']
+numerical_columns = ['age', 'weigth', 'height']
+column_trans = make_column_transformer(
+    (categorical_columns, OneHotEncoder(handle_unknown='ignore'),
+    (numerical_columns, RobustScaler())
+column_trans.fit_transform(df)
+</code></pre>
+
+<p>More options in the documentation: <a href=""http://scikit-learn.org/stable/modules/compose.html#columntransformer-for-heterogeneous-data"" rel=""noreferrer"">http://scikit-learn.org/stable/modules/compose.html#columntransformer-for-heterogeneous-data</a></p>
+","163740","","163740","","2018-10-14 09:08:50","2018-10-14 09:08:50","","","","3","","","","CC BY-SA 4.0"
+"27928411","2","","27928275","2015-01-13 17:54:43","","52","","<p>scikit-learn's LinearRegression doesn't calculate this information but you can easily extend the class to do it:</p>
+
+<pre><code>from sklearn import linear_model
+from scipy import stats
+import numpy as np
+
+
+class LinearRegression(linear_model.LinearRegression):
+    """"""
+    LinearRegression class after sklearn's, but calculate t-statistics
+    and p-values for model coefficients (betas).
+    Additional attributes available after .fit()
+    are `t` and `p` which are of the shape (y.shape[1], X.shape[1])
+    which is (n_features, n_coefs)
+    This class sets the intercept to 0 by default, since usually we include it
+    in X.
+    """"""
+
+    def __init__(self, *args, **kwargs):
+        if not ""fit_intercept"" in kwargs:
+            kwargs['fit_intercept'] = False
+        super(LinearRegression, self)\
+                .__init__(*args, **kwargs)
+
+    def fit(self, X, y, n_jobs=1):
+        self = super(LinearRegression, self).fit(X, y, n_jobs)
+
+        sse = np.sum((self.predict(X) - y) ** 2, axis=0) / float(X.shape[0] - X.shape[1])
+        se = np.array([
+            np.sqrt(np.diagonal(sse[i] * np.linalg.inv(np.dot(X.T, X))))
+                                                    for i in range(sse.shape[0])
+                    ])
+
+        self.t = self.coef_ / se
+        self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), y.shape[0] - X.shape[1]))
+        return self
+</code></pre>
+
+<p>Stolen from <a href=""https://gist.github.com/brentp/5355925"">here</a>. </p>
+
+<p>You should take a look at <a href=""http://statsmodels.sourceforge.net/devel/index.html"">statsmodels</a> for this kind of statistical analysis in Python.</p>
+","1330293","","1330293","","2015-01-13 18:02:28","2015-01-13 18:02:28","","","","1","","","","CC BY-SA 3.0"
+"27975633","2","","27928275","2015-01-16 00:46:25","","11","","<p>The code in elyase's answer <a href=""https://stackoverflow.com/a/27928411/4240413"">https://stackoverflow.com/a/27928411/4240413</a> does not actually work.  Notice that sse is a scalar, and then it tries to iterate through it.  The following code is a modified version.  Not amazingly clean, but I think it works more or less.</p>
+
+<pre><code>class LinearRegression(linear_model.LinearRegression):
+
+    def __init__(self,*args,**kwargs):
+        # *args is the list of arguments that might go into the LinearRegression object
+        # that we don't know about and don't want to have to deal with. Similarly, **kwargs
+        # is a dictionary of key words and values that might also need to go into the orginal
+        # LinearRegression object. We put *args and **kwargs so that we don't have to look
+        # these up and write them down explicitly here. Nice and easy.
+
+        if not ""fit_intercept"" in kwargs:
+            kwargs['fit_intercept'] = False
+
+        super(LinearRegression,self).__init__(*args,**kwargs)
+
+    # Adding in t-statistics for the coefficients.
+    def fit(self,x,y):
+        # This takes in numpy arrays (not matrices). Also assumes you are leaving out the column
+        # of constants.
+
+        # Not totally sure what 'super' does here and why you redefine self...
+        self = super(LinearRegression, self).fit(x,y)
+        n, k = x.shape
+        yHat = np.matrix(self.predict(x)).T
+
+        # Change X and Y into numpy matricies. x also has a column of ones added to it.
+        x = np.hstack((np.ones((n,1)),np.matrix(x)))
+        y = np.matrix(y).T
+
+        # Degrees of freedom.
+        df = float(n-k-1)
+
+        # Sample variance.     
+        sse = np.sum(np.square(yHat - y),axis=0)
+        self.sampleVariance = sse/df
+
+        # Sample variance for x.
+        self.sampleVarianceX = x.T*x
+
+        # Covariance Matrix = [(s^2)(X'X)^-1]^0.5. (sqrtm = matrix square root.  ugly)
+        self.covarianceMatrix = sc.linalg.sqrtm(self.sampleVariance[0,0]*self.sampleVarianceX.I)
+
+        # Standard erros for the difference coefficients: the diagonal elements of the covariance matrix.
+        self.se = self.covarianceMatrix.diagonal()[1:]
+
+        # T statistic for each beta.
+        self.betasTStat = np.zeros(len(self.se))
+        for i in xrange(len(self.se)):
+            self.betasTStat[i] = self.coef_[0,i]/self.se[i]
+
+        # P-value for each beta. This is a two sided t-test, since the betas can be 
+        # positive or negative.
+        self.betasPValue = 1 - t.cdf(abs(self.betasTStat),df)
+</code></pre>
+","4459821","","4240413","","2018-07-19 19:24:13","2018-07-19 19:24:13","","","","0","","","","CC BY-SA 4.0"
+"34983005","2","","27928275","2016-01-24 23:44:19","","15","","<p><em>EDIT: Probably not the right way to do it, see comments</em></p>
+
+<p>You could use sklearn.feature_selection.f_regression.</p>
+
+<p><a href=""http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.f_regression.html"" rel=""nofollow noreferrer"">click here for the scikit-learn page</a></p>
+","2667241","","1404585","","2020-01-04 17:41:18","2020-01-04 17:41:18","","","","5","","","","CC BY-SA 4.0"
+"42677750","2","","27928275","2017-03-08 17:17:57","","180","","<p>This is kind of overkill but let's give it a go.  First lets use statsmodel to find out what the p-values should be</p>
+<pre><code>import pandas as pd
+import numpy as np
+from sklearn import datasets, linear_model
+from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
+from scipy import stats
+
+diabetes = datasets.load_diabetes()
+X = diabetes.data
+y = diabetes.target
+
+X2 = sm.add_constant(X)
+est = sm.OLS(y, X2)
+est2 = est.fit()
+print(est2.summary())
+</code></pre>
+<p>and we get</p>
+<pre><code>                         OLS Regression Results                            
+==============================================================================
+Dep. Variable:                      y   R-squared:                       0.518
+Model:                            OLS   Adj. R-squared:                  0.507
+Method:                 Least Squares   F-statistic:                     46.27
+Date:                Wed, 08 Mar 2017   Prob (F-statistic):           3.83e-62
+Time:                        10:08:24   Log-Likelihood:                -2386.0
+No. Observations:                 442   AIC:                             4794.
+Df Residuals:                     431   BIC:                             4839.
+Df Model:                          10                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const        152.1335      2.576     59.061      0.000     147.071     157.196
+x1           -10.0122     59.749     -0.168      0.867    -127.448     107.424
+x2          -239.8191     61.222     -3.917      0.000    -360.151    -119.488
+x3           519.8398     66.534      7.813      0.000     389.069     650.610
+x4           324.3904     65.422      4.958      0.000     195.805     452.976
+x5          -792.1842    416.684     -1.901      0.058   -1611.169      26.801
+x6           476.7458    339.035      1.406      0.160    -189.621    1143.113
+x7           101.0446    212.533      0.475      0.635    -316.685     518.774
+x8           177.0642    161.476      1.097      0.273    -140.313     494.442
+x9           751.2793    171.902      4.370      0.000     413.409    1089.150
+x10           67.6254     65.984      1.025      0.306     -62.065     197.316
+==============================================================================
+Omnibus:                        1.506   Durbin-Watson:                   2.029
+Prob(Omnibus):                  0.471   Jarque-Bera (JB):                1.404
+Skew:                           0.017   Prob(JB):                        0.496
+Kurtosis:                       2.726   Cond. No.                         227.
+==============================================================================
+</code></pre>
+<p>Ok, let's reproduce this.  It is kind of overkill as we are almost reproducing a linear regression analysis using Matrix Algebra.  But what the heck.</p>
+<pre><code>lm = LinearRegression()
+lm.fit(X,y)
+params = np.append(lm.intercept_,lm.coef_)
+predictions = lm.predict(X)
+
+newX = pd.DataFrame({&quot;Constant&quot;:np.ones(len(X))}).join(pd.DataFrame(X))
+MSE = (sum((y-predictions)**2))/(len(newX)-len(newX.columns))
+
+# Note if you don't want to use a DataFrame replace the two lines above with
+# newX = np.append(np.ones((len(X),1)), X, axis=1)
+# MSE = (sum((y-predictions)**2))/(len(newX)-len(newX[0]))
+
+var_b = MSE*(np.linalg.inv(np.dot(newX.T,newX)).diagonal())
+sd_b = np.sqrt(var_b)
+ts_b = params/ sd_b
+
+p_values =[2*(1-stats.t.cdf(np.abs(i),(len(newX)-len(newX[0])))) for i in ts_b]
+
+sd_b = np.round(sd_b,3)
+ts_b = np.round(ts_b,3)
+p_values = np.round(p_values,3)
+params = np.round(params,4)
+
+myDF3 = pd.DataFrame()
+myDF3[&quot;Coefficients&quot;],myDF3[&quot;Standard Errors&quot;],myDF3[&quot;t values&quot;],myDF3[&quot;Probabilities&quot;] = [params,sd_b,ts_b,p_values]
+print(myDF3)
+</code></pre>
+<p>And this gives us.</p>
+<pre><code>    Coefficients  Standard Errors  t values  Probabilities
+0       152.1335            2.576    59.061         0.000
+1       -10.0122           59.749    -0.168         0.867
+2      -239.8191           61.222    -3.917         0.000
+3       519.8398           66.534     7.813         0.000
+4       324.3904           65.422     4.958         0.000
+5      -792.1842          416.684    -1.901         0.058
+6       476.7458          339.035     1.406         0.160
+7       101.0446          212.533     0.475         0.635
+8       177.0642          161.476     1.097         0.273
+9       751.2793          171.902     4.370         0.000
+10       67.6254           65.984     1.025         0.306
+</code></pre>
+<p>So we can reproduce the values from statsmodel.</p>
+","6506414","","7153489","","2020-07-09 03:07:31","2020-07-09 03:07:31","","","","6","","","","CC BY-SA 4.0"
+"46912457","2","","27928275","2017-10-24 13:57:03","","7","","<p>You can use <strong>scipy</strong> for p-value. This code is from scipy documentation. </p>
+
+<blockquote>
+<pre><code>&gt;&gt;&gt; from scipy import stats
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; x = np.random.random(10)
+&gt;&gt;&gt; y = np.random.random(10)
+&gt;&gt;&gt; slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+</code></pre>
+</blockquote>
+","4412026","","","","","2017-10-24 13:57:03","","","","1","","","","CC BY-SA 3.0"
+"50077476","2","","27928275","2018-04-28 14:15:47","","7","","<p>p_value is among f statistics. if you want to get the value, simply use this few lines of code:</p>
+
+<pre><code>import statsmodels.api as sm
+from scipy import stats
+
+diabetes = datasets.load_diabetes()
+X = diabetes.data
+y = diabetes.target
+
+X2 = sm.add_constant(X)
+est = sm.OLS(y, X2)
+print(est.fit().f_pvalue)
+</code></pre>
+","6244155","","","","","2018-04-28 14:15:47","","","","2","","","","CC BY-SA 3.0"
+"52370436","2","","27928275","2018-09-17 14:50:50","","8","","<p>There could be a mistake in <a href=""https://stackoverflow.com/questions/27928275/find-p-value-significance-in-scikit-learn-linearregression/42677750#42677750"">@JARH</a>'s answer in the case of a multivariable regression. 
+(I do not have enough reputation to comment.)</p>
+
+<p>In the following line:</p>
+
+<p><code>p_values =[2*(1-stats.t.cdf(np.abs(i),(len(newX)-1))) for i in ts_b]</code>,  </p>
+
+<p>the t-values follows a <a href=""https://en.wikipedia.org/wiki/Chi-squared_distribution"" rel=""noreferrer"">chi-squared distribution</a> of degree <code>len(newX)-1</code> instead of following a chi-squared distribution of degree <code>len(newX)-len(newX.columns)-1</code>.</p>
+
+<p>So this should be: </p>
+
+<p><code>p_values =[2*(1-stats.t.cdf(np.abs(i),(len(newX)-len(newX.columns)-1))) for i in ts_b]</code></p>
+
+<p>(See <a href=""https://en.wikipedia.org/wiki/Ordinary_least_squares#cite_ref-24"" rel=""noreferrer"">t-values for OLS regression</a> for more details)</p>
+","10375569","","","","","2018-09-17 14:50:50","","","","0","","","","CC BY-SA 4.0"
+"55570234","2","","27928275","2019-04-08 09:29:35","","9","","<p>An easy way to pull of the p-values is to use statsmodels regression:</p>
+
+<pre><code>import statsmodels.api as sm
+mod = sm.OLS(Y,X)
+fii = mod.fit()
+p_values = fii.summary2().tables[1]['P&gt;|t|']
+</code></pre>
+
+<p>You get a series of p-values that you can manipulate (for example choose the order you want to keep by evaluating each p-value):</p>
+
+<p><a href=""https://i.stack.imgur.com/tewiT.png"" rel=""noreferrer""><img src=""https://i.stack.imgur.com/tewiT.png"" alt=""enter image description here""></a></p>
+","7096004","","5481471","","2019-08-16 20:41:32","2019-08-16 20:41:32","","","","1","","","","CC BY-SA 4.0"
+"28069274","2","","28064634","2015-01-21 14:10:26","","231","","<p><code>train_test_split</code> splits arrays or matrices into random train and test subsets. That means that everytime you run it without specifying <code>random_state</code>, you will get a different result, this is expected behavior. For example:</p>
+
+<p><strong>Run 1:</strong></p>
+
+<pre><code>&gt;&gt;&gt; a, b = np.arange(10).reshape((5, 2)), range(5)
+&gt;&gt;&gt; train_test_split(a, b)
+[array([[6, 7],
+        [8, 9],
+        [4, 5]]),
+ array([[2, 3],
+        [0, 1]]), [3, 4, 2], [1, 0]]
+</code></pre>
+
+<p><strong>Run 2</strong></p>
+
+<pre><code>&gt;&gt;&gt; train_test_split(a, b)
+[array([[8, 9],
+        [4, 5],
+        [0, 1]]),
+ array([[6, 7],
+        [2, 3]]), [4, 2, 0], [3, 1]]
+</code></pre>
+
+<p>It changes. On the other hand if you use <code>random_state=some_number</code>, then you can guarantee that the output of <strong>Run 1</strong> will be equal to the output of <strong>Run 2</strong>, i.e. your split will be always the same. 
+It doesn't matter what the actual <code>random_state</code> number is 42, 0, 21, ... The important thing is that everytime you use 42, you will always get the same output the first time you make the split.
+This is useful if you want reproducible results, for example in the documentation, so that everybody can consistently see the same numbers when they run the examples. 
+In practice I would say, you should set the <code>random_state</code> to some fixed number while you test stuff, but then remove it in production if you really need a random (and not a fixed) split.</p>
+
+<p>Regarding your second question, a pseudo-random number generator is a number generator that generates almost truly random numbers. Why they are not truly random is out of the scope of this question and probably won't matter in your case, you can take a look <a href=""http://en.wikipedia.org/wiki/Pseudorandom_number_generator"" rel=""noreferrer"">here</a> form more details.</p>
+","1330293","","1330293","","2017-07-28 09:41:18","2017-07-28 09:41:18","","","","14","","","","CC BY-SA 3.0"
+"50672222","2","","28064634","2018-06-04 00:39:42","","14","","<p>If you don't specify the <code>random_state</code> in your code, then every time you run(execute) your code a new random value is generated and the train and test datasets would have different values each time.</p>
+
+<p>However, if a fixed value is assigned like <code>random_state = 42</code> then no matter how many times you execute your code the result would be the same .i.e, same values in train and test datasets.</p>
+","9886344","","9886344","","2018-06-04 00:46:33","2018-06-04 00:46:33","","","","0","","","","CC BY-SA 4.0"
+"30667615","2","","30667525","2015-06-05 13:19:11","","35","","<p>Make sure you have <a href=""https://www.anaconda.com/download"" rel=""nofollow noreferrer"">Anaconda</a> installed and then <a href=""http://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/"" rel=""nofollow noreferrer"">create a virtualenv using conda</a>. This will ensure all the imports work </p>
+
+<pre><code>Python 2.7.9 |Anaconda 2.2.0 (64-bit)| (default, Mar  9 2015, 16:20:48) 
+[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)] on linux2
+Type ""help"", ""copyright"", ""credits"" or ""license"" for more information.
+Anaconda is brought to you by Continuum Analytics.
+Please check out: http://continuum.io/thanks and https://binstar.org
+&gt;&gt;&gt; from sklearn.cross_validation import train_test_split
+</code></pre>
+","4723732","","366904","","2019-12-30 21:40:36","2019-12-30 21:40:36","","","","7","","","","CC BY-SA 4.0"
+"34844352","2","","30667525","2016-01-17 22:09:26","","633","","<p>It must relate to the renaming and deprecation of <code>cross_validation</code> sub-module to <code>model_selection</code>. Try substituting <code>cross_validation</code> to <code>model_selection</code></p>
+","1716733","","1138898","","2019-11-26 14:14:18","2019-11-26 14:14:18","","","","3","","","","CC BY-SA 4.0"
+"53104241","2","","30667525","2018-11-01 15:21:29","","15","","<p>May be it's due to the deprecation of sklearn.cross_validation.
+Please replace sklearn.cross_validation with sklearn.model_selection</p>
+
+<p>Ref-
+<a href=""https://github.com/amueller/scipy_2015_sklearn_tutorial/issues/60"" rel=""noreferrer"">https://github.com/amueller/scipy_2015_sklearn_tutorial/issues/60</a></p>
+","1053496","","1053496","","2018-11-04 14:36:14","2018-11-04 14:36:14","","","","2","","","","CC BY-SA 4.0"
+"53422836","2","","30667525","2018-11-22 01:51:51","","142","","<p>train_test_split is now in model_selection. Just type:</p>
+
+<pre><code>from sklearn.model_selection import train_test_split
+</code></pre>
+
+<p>it should work</p>
+","4635461","","9206753","","2018-11-22 03:03:59","2018-11-22 03:03:59","","","","0","","","","CC BY-SA 4.0"
+"54619256","2","","30667525","2019-02-10 17:51:13","","12","","<p>Splitting the dataset into the Training set and Test set</p>
+
+<pre><code>from sklearn.model_selection import train_test_split
+</code></pre>
+","7688757","","2227743","","2019-02-10 18:58:07","2019-02-10 18:58:07","","","","1","","","","CC BY-SA 4.0"
+"55322386","2","","30667525","2019-03-24 09:32:29","","43","","<p>I guess cross selection is not active anymore. We should use instead model selection. You can write it to run, <code>from sklearn.model_selection import train_test_split</code></p>
+
+<p>Thats it.</p>
+","11112318","","6885902","","2019-04-15 10:04:07","2019-04-15 10:04:07","","","","1","","","","CC BY-SA 4.0"
+"55381598","2","","30667525","2019-03-27 16:00:03","","9","","<p>Past : <code>from sklearn.cross_validation</code>
+(This package is deprecated in 0.18 version from 0.20 onwards it is changed to <code>from sklearn import model_selection</code>).</p>
+
+<p>Present: <code>from sklearn import model_selection</code></p>
+
+<p>Example 2:</p>
+
+<p>Past : <code>from sklearn.cross_validation import cross_val_score</code> (Version 0.18 which is deprecated)</p>
+
+<p>Present : <code>from sklearn.model_selection import cross_val_score</code></p>
+","4924520","","","","","2019-03-27 16:00:03","","","","0","","","","CC BY-SA 4.0"
+"56827870","2","","30667525","2019-06-30 20:32:01","","22","","<pre><code>sklearn.cross_validation
+</code></pre>
+
+<p>has changed to </p>
+
+<pre><code>sklearn.model_selection
+</code></pre>
+
+<p>Checkout the documentation here: 
+<a href=""https://scikit-learn.org/stable/modules/cross_validation.html"" rel=""noreferrer"">https://scikit-learn.org/stable/modules/cross_validation.html</a></p>
+","8382360","","","","","2019-06-30 20:32:01","","","","0","","","","CC BY-SA 4.0"
+"57222095","2","","30667525","2019-07-26 14:27:30","","26","","<p><code>sklearn.cross_validation</code> is now changed to <code>sklearn.model_selection</code></p>
+
+<p>Just use</p>
+
+<pre><code>from sklearn.model_selection import train_test_split
+</code></pre>
+
+<p>I think that will work.</p>
+","11700077","","7615877","","2019-07-26 16:42:26","2019-07-26 16:42:26","","","","0","","","","CC BY-SA 4.0"
+"58301554","2","","30667525","2019-10-09 09:55:11","","8","","<p><code>sklearn.cross_validation</code> is now changed to <code>sklearn.model_selection</code></p>
+
+<p>Just change</p>
+
+<pre><code>sklearn.cross_validation
+</code></pre>
+
+<p>to</p>
+
+<pre><code>sklearn.model_selection
+</code></pre>
+","9087835","","","","","2019-10-09 09:55:11","","","","0","","","","CC BY-SA 4.0"
+"40846742","2","","40845304","2016-11-28 14:31:37","","154","","<p>According to <a href=""https://github.com/numpy/numpy/pull/432"" rel=""noreferrer"">MAINT: silence Cython warnings about changes dtype/ufunc size. - numpy/numpy</a>:</p>
+
+<blockquote>
+  <p>These warnings are visible whenever you import scipy (or another
+  package) that was compiled against an older numpy than is installed.</p>
+</blockquote>
+
+<p>and the checks are inserted by Cython (hence are present in any module compiled with it).</p>
+
+<p>Long story short, <strong>these warnings should be benign in the particular case of <code>numpy</code></strong>, and <strong>these messages are filtered out since <code>numpy 1.8</code></strong> (the branch this commit went onto). While <a href=""http://scikit-learn.org/stable/install.html"" rel=""noreferrer""><code>scikit-learn 0.18.1</code> is compiled against <code>numpy 1.6.1</code></a>.</p>
+
+<p><strong>To filter these warnings yourself</strong>, you can do the same <a href=""https://github.com/numpy/numpy/pull/432/commits/170ed4e33d6196d724dc18ddcd42311c291b4587?diff=split"" rel=""noreferrer"">as the patch does</a>:</p>
+
+<pre><code>import warnings
+warnings.filterwarnings(""ignore"", message=""numpy.dtype size changed"")
+warnings.filterwarnings(""ignore"", message=""numpy.ufunc size changed"")
+</code></pre>
+
+<p>Of course, <strong>you can just recompile all affected modules from source against your local <code>numpy</code></strong> with <code>pip install --no-binary :all:</code>¹ <strong>instead</strong> if you have the <s>balls</s> tools for that.</p>
+
+<hr>
+
+<p>Longer story: the patch's proponent <a href=""https://github.com/numpy/numpy/pull/432#issuecomment-8401294"" rel=""noreferrer"">claims</a> there should be no risk specifically with <code>numpy</code>, and 3rd-party packages are intentionally built against older versions:</p>
+
+<blockquote>
+  <p>[Rebuilding everything against current numpy is] not a feasible
+  solution, and certainly shouldn't be necessary. Scipy (as many other
+  packages) is compatible with a number of versions of numpy. So when we
+  distribute scipy binaries, we build them against the lowest supported
+  numpy version (1.5.1 as of now) and they work with 1.6.x, 1.7.x and
+  numpy master as well.</p>
+  
+  <p>The real correct would be for Cython only to issue warnings when the
+  size of dtypes/ufuncs has changes in a way that breaks the ABI, and be
+  silent otherwise.</p>
+</blockquote>
+
+<p>As a result, Cython's devs <a href=""http://thread.gmane.org/gmane.comp.python.cython.devel/14352/focus=14354"" rel=""noreferrer"">agreed to trust the numpy team with maintaining binary compatibility by hand</a>, so we can probably expect that using versions with breaking ABI changes would yield a specially-crafted exception or some other explicit show-stopper.</p>
+
+<hr>
+
+<p>¹<sub>The previously available <code>--no-use-wheel</code> option has been removed <a href=""https://github.com/pypa/pip/commit/95b9541ed4b73632a53c2bc192144bb9e9af1c6b"" rel=""noreferrer"">since <code>pip 10.0.0</code></a>.</sub></p>
+","648265","","648265","","2018-08-10 11:37:08","2018-08-10 11:37:08","","","","1","","","","CC BY-SA 4.0"
+"51587845","2","","40845304","2018-07-30 06:06:58","","8","","<p>I've tried the above-mentioned ways, but nothing worked. But the issue was gone after I installed the libraries through apt install,</p>
+
+<p>For Python3,</p>
+
+<pre><code>pip3 uninstall -y numpy scipy pandas scikit-learn
+sudo apt update
+sudo apt install python3-numpy python3-scipy python3-pandas python3-sklearn 
+</code></pre>
+
+<p>For Python2,</p>
+
+<pre><code>pip uninstall -y numpy scipy pandas scikit-learn
+sudo apt update
+sudo apt install python-numpy python-scipy python-pandas python-sklearn 
+</code></pre>
+
+<p>Hope that helps.</p>
+","6308822","","7024766","","2018-08-19 11:04:00","2018-08-19 11:04:00","","","","3","","","","CC BY-SA 4.0"
+"51629298","2","","40845304","2018-08-01 09:03:13","","8","","<p>if you are in an anaconda environment use:</p>
+
+<pre><code>conda update --all
+</code></pre>
+","9831083","","1983854","","2018-08-02 09:41:29","2018-08-02 09:41:29","","","","1","","","","CC BY-SA 4.0"
+"51924174","2","","40845304","2018-08-20 04:29:25","","35","","<p>It's the issue of new numpy version (1.15.0)</p>
+
+<p>You can downgrade numpy and this problem will be fixed: </p>
+
+<p><strong><code>sudo pip uninstall numpy<br>
+ sudo pip install numpy==1.14.5</code></strong></p>
+
+<blockquote>
+  <p>Finally numpy 1.15.1 version is released so the warning issues are fixed.</p>
+  
+  <p>sudo pip install numpy==1.15.1</p>
+</blockquote>
+
+<p>This is working..</p>
+","8912663","","8912663","","2018-08-22 04:21:46","2018-08-22 04:21:46","","","","3","","","","CC BY-SA 4.0"
+"53955600","2","","40845304","2018-12-28 08:26:47","","7","","<p>Just upgrade your numpy module, right now it is 1.15.4. For windows</p>
+
+<pre><code>pip install numpy --upgrade
+</code></pre>
+","10096309","","6296561","","2018-12-28 13:32:40","2018-12-28 13:32:40","","","","0","","","","CC BY-SA 4.0"
