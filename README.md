@@ -1,6 +1,6 @@
 # Augument_API_Documentation
 
-##Final project for COMPn 4060
+Final project for COMPn 4060
 
 The contenet of the project is in the project files folder. 
 The main files are the get_data.py and ML_model.py.
